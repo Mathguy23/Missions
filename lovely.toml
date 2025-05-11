@@ -180,7 +180,7 @@ target = 'functions/state_events.lua'
 pattern = '''if G.hand.highlighted[i]:is_face() then inc_career_stat('c_face_cards_played', 1) end'''
 position = 'before'
 payload = '''for i2, j2 in pairs(SMODS.Suits) do
-    if G.hand.highlighted[i]:is_suit(j2.key) then
+    if G.GAME.modifiers.mission and G.hand.highlighted[i]:is_suit(j2.key) then
         if not G.GAME.miss_unlock_trackers.per_round[j2.key] then
             G.GAME.miss_unlock_trackers.per_round[j2.key] = 1
         else
@@ -226,4 +226,60 @@ target = 'functions/state_events.lua'
 pattern = '''G.FUNCS.discard_cards_from_highlighted = function(e, hook)'''
 position = 'after'
 payload = '''   G.GAME.miss_unlock_trackers.discarded = false'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''function win_game()'''
+position = 'after'
+payload = '''   if G.GAME.modifiers.mission then
+    unlock_party_joker('j_joker')
+    if not G.GAME.miss_unlock_trackers.skippedskip then
+        unlock_party_joker('j_diet_cola')
+    end
+    if not G.GAME.miss_unlock_trackers.discarded then
+        unlock_party_joker('j_delayed_grat')
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''G.GAME.dollars = G.GAME.dollars + mod'''
+position = 'after'
+payload = '''   if G.GAME.modifiers.mission then
+    if to_big then
+        if to_big(G.GAME.dollars) >= to_big(150) then
+            unlock_party_joker('j_business')
+        elseif to_big(G.GAME.dollars) <= to_big(-50) then
+            unlock_party_joker('j_credit_card')
+        end
+    else
+        if G.GAME.dollars >= 150 then
+            unlock_party_joker('j_business')
+        elseif G.GAME.dollars <= -50 then
+            unlock_party_joker('j_credit_card')
+        end
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''function level_up_hand(card, hand, instant, amount)'''
+position = 'after'
+payload = '''   if G.GAME.modifiers.mission then
+    if to_big then
+        if to_big(math.max(0, G.GAME.hands[hand].level + amount)) >= to_big(40) then
+            unlock_party_joker('j_space')
+        end
+    else
+        if math.max(0, G.GAME.hands[hand].level + amount) >= 40 then
+            unlock_party_joker('j_space')
+        end
+    end
+end'''
 match_indent = true
