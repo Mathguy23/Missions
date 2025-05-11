@@ -1,0 +1,229 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''  chosen = _challenge_chosen
+} or nil,'''
+position = 'at'
+payload = '''chosen = _challenge_chosen
+} or {
+    label = localize('b_missions'),
+    tab_definition_function = G.UIDEF.missions,
+    tab_definition_function_args = from_game_over,
+},
+G.STAGE == G.STAGES.MAIN_MENU and {
+    label = localize('b_missions'),
+    tab_definition_function = G.UIDEF.missions,
+    tab_definition_function_args = from_game_over,
+} or nil,
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''self.GAME.modifiers[v.id] = true'''
+position = 'after'
+payload = '''if (G.PROFILES[G.SETTINGS.profile].mission_jokers) and (v.id == 'mission') then
+    for i, j in ipairs(G.PROFILES[G.SETTINGS.profile].mission_jokers) do
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                add_joker(j, nil)
+                return true
+            end
+        }))
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'cardarea.lua'
+pattern = '''self:emplace(card, nil, stay_flipped)'''
+position = 'before'
+payload = '''if (self == G.hand) and G.GAME and G.GAME.modifiers and (G.GAME.modifiers.hiding_aura) then
+    local odds = 0
+    if (G.GAME.round_resets.ante >= 3) then
+        odds = 0.1 + 0.018 * (G.GAME.round_resets.ante - 2)
+    end
+    if pseudorandom('hiding') < odds then
+        stay_flipped = true
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:flip()'''
+position = 'after'
+payload = '''   if self.ability.miss_obscured and (self.facing == 'back') then
+        return
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if self.ability and self.ability.perma_debuff then self.debuff = true end'''
+position = 'after'
+payload = '''if self.ability and self.ability.miss_obscured and (self.facing == 'front') then self.facing = 'back';self.sprite_facing = 'back' end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.FUNCS.sort_hand_value = function(e)'''
+position = 'after'
+payload = '''   if G.GAME and G.GAME.blind and G.GAME.blind.disable_sort then
+    G.GAME.blind:wiggle()
+    return
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.FUNCS.sort_hand_suit = function(e)'''
+position = 'after'
+payload = '''   if G.GAME and G.GAME.blind and G.GAME.blind.disable_sort then
+    G.GAME.blind:wiggle()
+    return
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'cardarea.lua'
+pattern = '''elseif self.config.sort == 'asc' then'''
+position = 'before'
+payload = '''elseif self.config.sort == 'random_sort_miss' then
+    table.sort(self.cards, function (a, b) return (a.ability and a.ability.miss_index or 0) < (b.ability and b.ability.miss_index or 0) end )'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'cardarea.lua'
+pattern = '''function CardArea:sort(method)'''
+position = 'after'
+payload = '''   if G.GAME and G.GAME.blind and G.GAME.blind.disable_sort and (self == G.hand) then
+    method = 'random_sort_miss'
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '''disabled = self.disabled,'''
+position = 'after'
+payload = '''disable_sort = self.disable_sort,'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '''self.disabled = blindTable.disabled'''
+position = 'after'
+payload = '''self.disable_sort = blindTable.disable_sort'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''elseif _c.set == 'Joker' then'''
+position = 'before'
+payload = '''elseif (_c.set == 'Joker') and card and card.ability and card.ability.grayscaled then
+    localize{type = 'descriptions', key = _c.key, set = 'LockedJoker', nodes = desc_nodes, vars = specific_vars or {}}'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''local badges = {}'''
+position = 'after'
+payload = '''if self.ability and self.ability.grayscaled then
+    no_badge = nil
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''badges.card_type = card_type'''
+position = 'at'
+payload = '''if not self.ability or not self.ability.grayscaled then
+    badges.card_type = card_type
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''chips_text = '0','''
+position = 'after'
+payload = '''miss_unlock_trackers = {
+        per_round = {},
+        skippedskip = false,
+        discarded = false,
+    }
+,
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''if G.hand.highlighted[i]:is_face() then inc_career_stat('c_face_cards_played', 1) end'''
+position = 'before'
+payload = '''for i2, j2 in pairs(SMODS.Suits) do
+    if G.hand.highlighted[i]:is_suit(j2.key) then
+        if not G.GAME.miss_unlock_trackers.per_round[j2.key] then
+            G.GAME.miss_unlock_trackers.per_round[j2.key] = 1
+        else
+            G.GAME.miss_unlock_trackers.per_round[j2.key] = G.GAME.miss_unlock_trackers.per_round[j2.key] + 1
+        end
+        local amt = G.GAME.miss_unlock_trackers.per_round[j2.key]
+        if amt >= 25 then
+            if j2.key == "Spades" then
+                unlock_party_joker('j_wrathful_joker')
+            elseif j2.key == "Hearts" then
+                unlock_party_joker('j_lusty_joker')
+            elseif j2.key == "Clubs" then
+                unlock_party_joker('j_gluttenous_joker')
+            elseif j2.key == "Diamonds" then
+                unlock_party_joker('j_greedy_joker')
+            end
+        end
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''local game_over = true'''
+position = 'before'
+payload = '''G.GAME.miss_unlock_trackers.per_round = {}'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''G.GAME.facing_blind = true'''
+position = 'before'
+payload = '''if G.GAME.round_resets.blind_tags[G.GAME.blind_on_deck] then
+    G.GAME.miss_unlock_trackers.skippedskip = true
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.FUNCS.discard_cards_from_highlighted = function(e, hook)'''
+position = 'after'
+payload = '''   G.GAME.miss_unlock_trackers.discarded = false'''
+match_indent = true
