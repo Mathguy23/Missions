@@ -1,7 +1,13 @@
 return {
     descriptions = {
         Back = {
-
+            b_miss_mission = {
+                name = "Mission Deck",
+                text = {
+                    "Complete",
+                    "the {C:attention}Mission{}",
+                }
+            },
         },
         Other = {
             

@@ -50,6 +50,9 @@ payload = '''if (self == G.hand) and G.GAME and G.GAME.modifiers and (G.GAME.mod
     if (G.GAME.round_resets.ante >= 3) then
         odds = 0.1 + 0.018 * (G.GAME.round_resets.ante - 2)
     end
+    if G.GAME and G.GAME.blind and (G.GAME.blind.name == "Scorched Acorn") and not G.GAME.blind.disabled then
+        odds = odds * 1.5
+    end
     if pseudorandom('hiding') < odds then
         stay_flipped = true
     end
@@ -79,7 +82,7 @@ match_indent = true
 target = 'functions/button_callbacks.lua'
 pattern = '''G.FUNCS.sort_hand_value = function(e)'''
 position = 'after'
-payload = '''   if G.GAME and G.GAME.blind and G.GAME.blind.disable_sort then
+payload = '''   if G.GAME and G.GAME.blind and G.GAME.blind.disable_sort and not G.GAME.blind.disabled then
     G.GAME.blind:wiggle()
     return
 end'''
@@ -90,7 +93,7 @@ match_indent = true
 target = 'functions/button_callbacks.lua'
 pattern = '''G.FUNCS.sort_hand_suit = function(e)'''
 position = 'after'
-payload = '''   if G.GAME and G.GAME.blind and G.GAME.blind.disable_sort then
+payload = '''   if G.GAME and G.GAME.blind and G.GAME.blind.disable_sort and not G.GAME.blind.disabled then
     G.GAME.blind:wiggle()
     return
 end'''
@@ -110,7 +113,7 @@ match_indent = true
 target = 'cardarea.lua'
 pattern = '''function CardArea:sort(method)'''
 position = 'after'
-payload = '''   if G.GAME and G.GAME.blind and G.GAME.blind.disable_sort and (self == G.hand) then
+payload = '''   if G.GAME and G.GAME.blind and G.GAME.blind.disable_sort and (self == G.hand) and not G.GAME.blind.disabled then
     method = 'random_sort_miss'
 end'''
 match_indent = true
@@ -273,11 +276,11 @@ pattern = '''function level_up_hand(card, hand, instant, amount)'''
 position = 'after'
 payload = '''   if G.GAME.modifiers.mission then
     if to_big then
-        if to_big(math.max(0, G.GAME.hands[hand].level + amount)) >= to_big(40) then
+        if to_big(math.max(0, G.GAME.hands[hand].level + (amount or 1))) >= to_big(40) then
             unlock_party_joker('j_space')
         end
     else
-        if math.max(0, G.GAME.hands[hand].level + amount) >= 40 then
+        if math.max(0, G.GAME.hands[hand].level + (amount or 1)) >= 40 then
             unlock_party_joker('j_space')
         end
     end

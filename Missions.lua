@@ -10,6 +10,8 @@
 
 SMODS.Atlas({ key = "blinds", atlas_table = "ANIMATION_ATLAS", path = "blinds.png", px = 34, py = 34, frames = 21 })
 
+SMODS.Atlas({ key = "decks", atlas_table = "ASSET_ATLAS", path = "decks.png", px = 71, py = 95})
+
 function G.UIDEF.missions(from_game_over)
 
     local area = CardArea(
@@ -42,6 +44,7 @@ function G.UIDEF.missions(from_game_over)
                 {n=G.UIT.R, config={align = "cm", padding = 0, colour = G.C.CLEAR, padding = 0.1}, nodes={
                     UIBox_button({label = {localize('b_play_cap')}, button = 'start_setup_mission', minw = 3, scale = 0.6, minh = 0.8, colour = G.C.BLUE}),
                 }},
+                create_option_cycle({options = {'White Stake', 'Gold Stake'}, w = 3, opt_callback = 'mission_stake_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = miss_stake_page, colour = G.C.RED, no_pips = true})
         }}}
     }
     return t
@@ -243,10 +246,15 @@ G.FUNCS.remove_joker = function(e)
     G.FUNCS.change_tab(tab_but)
 end
 
+G.FUNCS.mission_stake_page = function(args)
+    if not args or not args.cycle_config then return end
+    miss_stake_page = args.cycle_config.current_option
+end
+
 G.FUNCS.start_setup_mission = function(e)  
-    G.FUNCS.start_run(e, {stake = 1, challenge = {
+    G.FUNCS.start_run(e, {stake = (miss_stake_page == 2) and 8 or 1, challenge = {
         deck = {
-            type = 'Red Deck',
+            type = 'Mission Deck',
         },
         rules = {
             custom = {
@@ -333,12 +341,20 @@ SMODS.Shader {
     path = 'grayscale.fs'
 }
 
+SMODS.Back {
+    key = 'mission',
+    name = "Mission Deck",
+    pos = { x = 0, y = 0 },
+    atlas = 'decks',
+    omit = true
+}
+
 local old_boss = get_new_boss
 function get_new_boss()
-    if G.GAME.modifiers.mission and (G.GAME.round_resets.ante == 4) then
+    if G.GAME.modifiers.mission and (G.GAME.round_resets.ante % 8 == 4) then
         G.GAME.bosses_used['bl_final_acorn'] = G.GAME.bosses_used['bl_final_acorn'] + 1
         return 'bl_final_acorn'
-    elseif G.GAME.modifiers.mission and (G.GAME.round_resets.ante == 8) then
+    elseif G.GAME.modifiers.mission and (G.GAME.round_resets.ante > 0) and (G.GAME.round_resets.ante % 8 == 0) then
         G.GAME.bosses_used['bl_miss_scorched_acorn'] = G.GAME.bosses_used['bl_miss_scorched_acorn'] + 1
         return 'bl_miss_scorched_acorn'
     end
