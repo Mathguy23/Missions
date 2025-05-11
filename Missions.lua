@@ -215,7 +215,7 @@ G.FUNCS.can_add_joker = function(e)
             valid = false
         end
     end
-    if not valid or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers[e.config.ref_table.config.center.key] then
+    if not valid or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers[e.config.ref_table.config.center.key] or (#G.PROFILES[G.SETTINGS.profile].mission_jokers >= 5) then
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
     else
@@ -260,7 +260,7 @@ end
 SMODS.Blind {
     loc_txt = {
         name = 'Scorched Acorn',
-        text = { 'Sorting is', 'disabled' }
+        text = { 'Sorting is disabled,', 'Face Down Champion' }
     },
     key = 'scorched_acorn',
     name = "Scorched Acorn",
@@ -308,8 +308,8 @@ SMODS.Sticker {
             return
         end
         local odds = 0
-        if (G.GAME.round_resets.ante >= 6) then
-            odds = 0.1 + 0.085 * (G.GAME.round_resets.ante - 5)
+        if (G.GAME.round_resets.ante >= 4) then
+            odds = 0.1 + 0.085 * (G.GAME.round_resets.ante - 3)
         end
         if (pseudorandom('badges') > odds) then
             return

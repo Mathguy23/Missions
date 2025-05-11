@@ -105,7 +105,7 @@ vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords
 	number gray = tex.r * 0.299 + tex.g * 0.587 + tex.b * 0.114;
 	gray = gray * 0.4;
 
-	tex.r = gray + 0 * weight;
+	tex.r = gray + 0.01 * weight;
 	tex.g = gray;
 	tex.b = gray;
 

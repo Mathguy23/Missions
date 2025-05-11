@@ -225,7 +225,7 @@ match_indent = true
 target = 'functions/state_events.lua'
 pattern = '''G.FUNCS.discard_cards_from_highlighted = function(e, hook)'''
 position = 'after'
-payload = '''   G.GAME.miss_unlock_trackers.discarded = false'''
+payload = '''   G.GAME.miss_unlock_trackers.discarded = true'''
 match_indent = true
 
 [[patches]]
