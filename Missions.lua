@@ -44,7 +44,7 @@ function G.UIDEF.missions(from_game_over)
                 {n=G.UIT.R, config={align = "cm", padding = 0, colour = G.C.CLEAR, padding = 0.1}, nodes={
                     UIBox_button({label = {localize('b_play_cap')}, button = 'start_setup_mission', minw = 3, scale = 0.6, minh = 0.8, colour = G.C.BLUE}),
                 }},
-                create_option_cycle({options = {'White Stake', 'Gold Stake'}, w = 3, opt_callback = 'mission_stake_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = miss_stake_page, colour = G.C.RED, no_pips = true})
+                create_option_cycle({options = {localize{type = 'name_text', key = 'stake_white', set = 'Stake'}, localize{type = 'name_text', key = 'stake_gold', set = 'Stake'}}, w = 3, opt_callback = 'mission_stake_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = miss_stake_page, colour = G.C.RED, no_pips = true})
         }}}
     }
     return t
@@ -252,7 +252,7 @@ G.FUNCS.mission_stake_page = function(args)
 end
 
 G.FUNCS.start_setup_mission = function(e)  
-    G.FUNCS.start_run(e, {stake = (miss_stake_page == 2) and 8 or 1, challenge = {
+    G.FUNCS.start_run(e, {stake = (miss_stake_page == 2) and G.P_STAKES['stake_gold'].order or G.P_STAKES['stake_gold'].order, challenge = {
         deck = {
             type = 'Mission Deck',
         },
