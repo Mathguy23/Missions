@@ -4,7 +4,7 @@
 --- PREFIX: miss
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Balatro: Missions Gamemode
---- VERSION: 1.0.1
+--- VERSION: 1.0.2
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -252,7 +252,7 @@ G.FUNCS.mission_stake_page = function(args)
 end
 
 G.FUNCS.start_setup_mission = function(e)  
-    G.FUNCS.start_run(e, {stake = (miss_stake_page == 2) and G.P_STAKES['stake_gold'].order or G.P_STAKES['stake_gold'].order, challenge = {
+    G.FUNCS.start_run(e, {stake = (miss_stake_page == 2) and G.P_STAKES['stake_gold'].order or G.P_STAKES['stake_white'].order, challenge = {
         deck = {
             type = 'Mission Deck',
         },
