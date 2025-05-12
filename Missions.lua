@@ -4,7 +4,7 @@
 --- PREFIX: miss
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Balatro: Missions Gamemode
---- VERSION: 1.0.0
+--- VERSION: 1.0.1
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -18,7 +18,7 @@ function G.UIDEF.missions(from_game_over)
         G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h,
         (5.25)*G.CARD_W,
         1*G.CARD_H, 
-    {card_limit = 5, type = 'joker', highlight_limit = 1})
+    {card_limit = 5, type = 'title_2', highlight_limit = 1})
 
     if not G.PROFILES[G.SETTINGS.profile].mission_jokers then
         G.PROFILES[G.SETTINGS.profile].mission_jokers = {}
