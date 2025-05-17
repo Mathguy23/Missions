@@ -29,10 +29,14 @@ target = 'game.lua'
 pattern = '''self.GAME.modifiers[v.id] = true'''
 position = 'after'
 payload = '''if (G.PROFILES[G.SETTINGS.profile].mission_jokers) and (v.id == 'mission') then
+    self.GAME.modifiers[v.id] = v.mission_id
     for i, j in ipairs(G.PROFILES[G.SETTINGS.profile].mission_jokers) do
         G.E_MANAGER:add_event(Event({
             func = function()
-                add_joker(j, nil)
+                local card = add_joker(j, nil)
+                if v.mission_id == 2 then
+                    card:set_eternal(true)
+                end
                 return true
             end
         }))
@@ -45,7 +49,7 @@ match_indent = true
 target = 'cardarea.lua'
 pattern = '''self:emplace(card, nil, stay_flipped)'''
 position = 'before'
-payload = '''if (self == G.hand) and G.GAME and G.GAME.modifiers and (G.GAME.modifiers.hiding_aura) then
+payload = '''if (self == G.hand) and G.GAME and G.GAME.modifiers and (G.GAME.modifiers.mission == 1) then
     local odds = 0
     if (G.GAME.round_resets.ante >= 3) then
         odds = 0.1 + 0.018 * (G.GAME.round_resets.ante - 2)
@@ -140,7 +144,11 @@ target = 'functions/common_events.lua'
 pattern = '''elseif _c.set == 'Joker' then'''
 position = 'before'
 payload = '''elseif (_c.set == 'Joker') and card and card.ability and card.ability.grayscaled then
-    localize{type = 'descriptions', key = _c.key, set = 'LockedJoker', nodes = desc_nodes, vars = specific_vars or {}}'''
+    if G.localization.descriptions.LockedJoker[_c.key] then
+        localize{type = 'descriptions', key = _c.key, set = 'LockedJoker', nodes = desc_nodes, vars = specific_vars or {}}
+    else
+        localize{type = 'descriptions', key = 'tbd', set = 'LockedJoker', nodes = desc_nodes, vars = specific_vars or {}}
+    end'''
 match_indent = true
 
 [[patches]]
@@ -169,11 +177,14 @@ target = 'game.lua'
 pattern = '''chips_text = '0','''
 position = 'after'
 payload = '''miss_unlock_trackers = {
-        per_round = {},
-        skippedskip = false,
-        discarded = false,
-    }
-,
+    per_round = {},
+    skippedskip = false,
+    discarded = false,
+    nonfivecardhand = false,
+},
+miss_funds = {
+    curr_dollars = 0,
+},
 '''
 match_indent = true
 
@@ -202,6 +213,13 @@ payload = '''for i2, j2 in pairs(SMODS.Suits) do
             end
         end
     end
+end
+if G.GAME.modifiers.mission and not G.hand.highlighted[i]:is_face(true) then
+    if not G.GAME.miss_unlock_trackers.per_round['nonface'] then
+        G.GAME.miss_unlock_trackers.per_round['nonface'] = 1
+    else
+        G.GAME.miss_unlock_trackers.per_round['nonface'] = G.GAME.miss_unlock_trackers.per_round['nonface'] + 1
+    end
 end'''
 match_indent = true
 
@@ -210,7 +228,13 @@ match_indent = true
 target = 'functions/state_events.lua'
 pattern = '''local game_over = true'''
 position = 'before'
-payload = '''G.GAME.miss_unlock_trackers.per_round = {}'''
+payload = '''if G.GAME.blind and G.GAME.blind.name == 'The Plant' then
+    if (G.GAME.miss_unlock_trackers.per_round['nonface'] == nil) or (G.GAME.miss_unlock_trackers.per_round['nonface'] == 0) then
+        unlock_party_joker('j_pareidolia')
+    end
+end
+G.GAME.miss_unlock_trackers.per_round = {}
+G.GAME.miss_round_update = true'''
 match_indent = true
 
 [[patches]]
@@ -243,6 +267,12 @@ payload = '''   if G.GAME.modifiers.mission then
     end
     if not G.GAME.miss_unlock_trackers.discarded then
         unlock_party_joker('j_delayed_grat')
+    end
+    if not G.GAME.miss_unlock_trackers.nonfivecardhand then
+        unlock_party_joker('j_splash')
+    end
+    if G.GAME.round_scores.times_rerolled.amt >= 75 then
+        unlock_party_joker('j_chaos')
     end
 end'''
 match_indent = true
@@ -285,4 +315,142 @@ payload = '''   if G.GAME.modifiers.mission then
         end
     end
 end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''if G.GAME.blind and G.boss_throw_hand and self.STATE == self.STATES.SELECTING_HAND then'''
+position = 'before'
+payload = '''if (G.GAME and G.GAME.modifiers and (G.GAME.modifiers.mission == 2)) and G.jokers then
+    for i = 1, #G.jokers.cards do
+        if G.jokers.cards[i] and not G.jokers.cards[i].ability.eternal and not G.jokers.cards[i].ability.death_timer then
+            G.jokers.cards[i].ability.death_timer = 3
+        end
+    end
+    for i = 1, #G.consumeables.cards do
+        if G.consumeables.cards[i] and not G.consumeables.cards[i].ability.eternal and not G.consumeables.cards[i].ability.death_timer then
+            G.consumeables.cards[i].ability.death_timer = 3
+        end
+    end
+end
+if G.GAME.miss_round_update and (#G.GAME.miss_funds > 0) then
+    for i = #G.GAME.miss_funds, 1, -1 do
+        G.GAME.miss_funds[i][2] = G.GAME.miss_funds[i][2] - 1
+        if G.GAME.miss_funds[i][2] <= 0 then
+            G.GAME.dollars = G.GAME.dollars - G.GAME.miss_funds[i][1]
+            G.GAME.miss_funds.curr_dollars = G.GAME.miss_funds.curr_dollars - G.GAME.miss_funds[i][1]
+            table.remove(G.GAME.miss_funds, i)
+        end
+    end
+end
+if G.GAME.miss_round_update or G.GAME.miss_hand_update then
+    for i = #G.jokers.cards, 1, -1 do
+        if G.jokers.cards[i] and not G.jokers.cards[i].ability.eternal and G.jokers.cards[i].ability.death_timer then
+            G.jokers.cards[i].ability.death_timer = (G.jokers.cards[i].ability.death_timer or 3) - 1
+            if G.jokers.cards[i].ability.death_timer == 0 then
+                G.jokers.cards[i]:remove()
+            end
+        end
+    end
+    for i = #G.consumeables.cards, 1, -1 do
+        if G.consumeables.cards[i] and not G.consumeables.cards[i].ability.eternal and G.consumeables.cards[i].ability.consumeable and G.consumeables.cards[i].ability.death_timer then
+            G.consumeables.cards[i].ability.death_timer = (G.consumeables.cards[i].ability.death_timer or 3) - 1
+            if G.consumeables.cards[i].ability.death_timer == 0 then
+                G.consumeables.cards[i]:remove()
+            end
+        end
+    end
+end
+G.GAME.miss_round_update = nil
+G.GAME.miss_hand_update = nil
+if (G.GAME and G.GAME.modifiers and (G.GAME.modifiers.mission == 2)) and (G.GAME.miss_funds.curr_dollars ~= G.GAME.dollars) then
+    local change = G.GAME.dollars - G.GAME.miss_funds.curr_dollars
+    G.GAME.miss_funds.curr_dollars = G.GAME.dollars
+    if to_big then
+        change = to_big(change)
+        if change > to_big(0) then
+            G.GAME.miss_funds[#G.GAME.miss_funds + 1] = {change, 3}
+        else
+            while (change < to_big(0)) and (#G.GAME.miss_funds > 0) do
+                if -change >= to_big(G.GAME.miss_funds[#G.GAME.miss_funds][1]) then
+                    change = change + G.GAME.miss_funds[#G.GAME.miss_funds][1]
+                    G.GAME.miss_funds[#G.GAME.miss_funds] = nil
+                else
+                    G.GAME.miss_funds[#G.GAME.miss_funds][1] = to_big(G.GAME.miss_funds[#G.GAME.miss_funds][1]) + change
+                    change = to_big(0)
+                end
+            end
+        end
+    else
+        if change > 0 then
+            G.GAME.miss_funds[#G.GAME.miss_funds + 1] = {change, 3}
+        else
+            while (change < 0) and (#G.GAME.miss_funds > 0) do
+                if -change >= G.GAME.miss_funds[#G.GAME.miss_funds][1] then
+                    change = change + G.GAME.miss_funds[#G.GAME.miss_funds][1]
+                    G.GAME.miss_funds[#G.GAME.miss_funds] = nil
+                else
+                    G.GAME.miss_funds[#G.GAME.miss_funds][1] = G.GAME.miss_funds[#G.GAME.miss_funds][1] + change
+                    change = 0
+                end
+            end
+        end
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''--Fill all remaining info if this is the main desc'''
+position = 'before'
+payload = '''if G.GAME and G.GAME.blind and (G.GAME.blind.name == "Existential Eraser") and not G.GAME.blind.disabled then
+    if card and card.ability and card.ability.death_timer then info_queue[#info_queue+1] = {key = 'death_timer_hands', set = 'Other', vars = {card.ability.death_timer}} end
+else
+    if card and card.ability and card.ability.death_timer then info_queue[#info_queue+1] = {key = 'death_timer', set = 'Other', vars = {card.ability.death_timer}} end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.FUNCS.draw_from_play_to_discard()'''
+position = 'after'
+payload = '''if G.GAME and G.GAME.blind and (G.GAME.blind.name == "Existential Eraser") and not G.GAME.blind.disabled then
+    G.E_MANAGER:add_event(Event({
+        trigger = 'immediate',
+        func = function()
+            G.GAME.miss_hand_update = true
+            return true
+        end
+    }))
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.GAME.hands[text].played = G.GAME.hands[text].played + 1'''
+position = 'before'
+payload = '''if #scoring_hand ~= 5 then
+    G.GAME.miss_unlock_trackers.nonfivecardhand = true
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''ease_dollars(self.sell_cost)'''
+position = 'after'
+payload = '''local cost = self.sell_cost
+G.E_MANAGER:add_event(Event({
+        trigger = 'immediate',
+        func = function()
+            if cost >= 75 then
+                unlock_party_joker('j_egg')
+            end
+            return true
+        end
+    }))'''
 match_indent = true

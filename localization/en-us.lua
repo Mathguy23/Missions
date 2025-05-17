@@ -10,7 +10,20 @@ return {
             },
         },
         Other = {
-            
+            death_timer = {
+                name = "Timer",
+                text = {
+                    "{C:red}Deleted{} in",
+                    "{C:attention}#1#{} rounds"
+                }
+            },
+            death_timer_hands = {
+                name = "Timer",
+                text = {
+                    "{C:red}Deleted{} in",
+                    "{C:attention}#1#{} hands"
+                }
+            }
         },
         Enhanced = {
 
@@ -79,8 +92,42 @@ return {
             j_business = {
                 text = {
                     "Have {C:money}$150{}",
+                    "or more"
                 }
             },
+            j_pareidolia = {
+                text = {
+                    "Defeat {C:attention}The Plant{}",
+                    "playing only",
+                    "{C:attention}Face Cards{}"
+                }
+            },
+            j_splash = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "playing only {C:attention}5-card{}",
+                    "hands"
+                }
+            },
+            j_egg = {
+                text = {
+                    "Sell a {C:attention}Joker{} for",
+                    "{C:money}$75{} or more",
+                }
+            },
+            j_chaos = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "with {C:attention}75{} times",
+                    "{C:green}rerolled{}"
+                }
+            },
+            tbd = {
+                text = {
+                    "To be",
+                    "Determined"
+                }
+            }
         }
     },
     misc = {
@@ -88,7 +135,9 @@ return {
             b_missions = "Missions",
             b_add_joker = "Add Joker",
             b_remove_joker = "Remove Jokers",
-            k_available_ex = "Available!"
+            k_available_ex = "Available!",
+            m_covert_chasm = "The Covert Chasm",
+            m_fading_fog = "The Fading Fog",
         },
         v_text = {
             
