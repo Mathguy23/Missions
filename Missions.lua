@@ -4,7 +4,7 @@
 --- PREFIX: miss
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Balatro: Missions Gamemode
---- VERSION: 1.1.0
+--- VERSION: 1.1.1
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -16,11 +16,105 @@ SMODS.Atlas({ key = "blinds3", atlas_table = "ANIMATION_ATLAS", path = "blinds3.
 
 SMODS.Atlas({ key = "decks", atlas_table = "ASSET_ATLAS", path = "decks.png", px = 71, py = 95})
 
+SMODS.Atlas({ key = "stickers", atlas_table = "ASSET_ATLAS", path = "stickers.png", px = 71, py = 95})
+
 local adding_jokers = {
     'j_joker', 'j_wrathful_joker', 'j_lusty_joker', 'j_gluttenous_joker', 'j_greedy_joker', 'j_credit_card', 'j_diet_cola', 'j_delayed_grat', 'j_space', 'j_business',
     'j_8_ball', 'j_pareidolia', 'j_egg', 'j_mr_bones', 'j_chaos', 'j_superposition', 'j_reserved_parking', 'j_faceless', 'j_todo_list', 'j_seance',
     'j_sly', 'j_wily', 'j_clever', 'j_devious', 'j_crafty', 'j_jolly', 'j_zany', 'j_mad', 'j_crazy', 'j_droll', 
-    'j_matador', 'j_gros_michel', 'j_splash', 'j_drunkard', 'j_hallucination',
+    'j_matador', 'j_gros_michel', 'j_splash', 'j_drunkard', 'j_hallucination', 'j_abstract', 'j_hanging_chad', 'j_riff_raff', 'j_ramen', 'j_popcorn'
+}
+
+miss_joker_tiers = {
+
+}
+
+jokers_with_face = {
+    j_joker = true,
+    j_greedy_joker = true,
+    j_wrathful_joker = true,
+    j_lusty_joker = true,
+    j_gluttenous_joker = true,
+    j_sly = true,
+    j_wily = true,
+    j_clever = true,
+    j_devious = true,
+    j_crafty = true,
+    j_jolly = true,
+    j_zany = true,
+    j_mad = true,
+    j_crazy = true,
+    j_droll = true,
+    j_half = true,
+    j_mime = true,
+    j_marble = true,
+    j_misprint = true,
+    j_chaos = true,
+    j_steel_joker = true,
+    j_scary_face = true,
+    j_hack = true,
+    j_pareidolia = true,
+    j_even_steven = true,
+    j_odd_todd = true,
+    j_scholar = true,
+    j_space = true,
+    j_egg = true,
+    j_burglar = true,
+    j_blackboard = true,
+    j_runner = true,
+    j_blue_joker = true,
+    j_sixth_sense = true,
+    j_constellation = true,
+    j_hiker = true,
+    j_green_joker = true,
+    j_card_sharp = true,
+    j_madness = true,
+    j_square = true,
+    j_riff_raff = true,
+    j_vampire = true,
+    j_hologram = true,
+    j_vagabond = true,
+    j_baron = true,
+    j_midas_mask = true,
+    j_luchador = true,
+    j_photograph = true,
+    j_mail = true,
+    j_hallucination = true,
+    j_fortune_teller = true,
+    j_stone = true,
+    j_golden = true,
+    j_lucky_cat = true,
+    j_baseball = true,
+    j_bull = true,
+    j_trading = true,
+    j_flash = true,
+    j_ancient = true,
+    j_selzer = true,
+    j_smiley = true,
+    j_mr_bones = true,
+    j_sock_and_buskin = true,
+    j_swashbuckler = true,
+    j_smeared = true,
+    j_throwback = true,
+    j_glass = true,
+    j_ring_master = true,
+    j_blueprint = true,
+    j_wee = true,
+    j_merry_andy = true,
+    j_idol = true,
+    j_matador = true,
+    j_stuntman = true,
+    j_brainstorm = true,
+    j_shoot_the_moon = true,
+    j_drivers_license = true,
+    j_cartomancer = true,
+    j_astronomer = true,
+    j_burnt = true,
+    j_caino = true,
+    j_triboulet = true,
+    j_yorick = true,
+    j_chicot = true,
+    j_perkeo = true,
 }
 
 function G.UIDEF.missions(from_game_over)
@@ -49,7 +143,7 @@ function G.UIDEF.missions(from_game_over)
                     {n=G.UIT.C, config={align = "cm", padding = 0, minh = 0.8, minw = 0.4 + (5.25)*G.CARD_W}, nodes = {{n=G.UIT.O, config={object = area}}}},
                 }},
                 {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
-                    UIBox_button({col = true,label = {localize('b_add_joker')}, button = 'add_joker_ui', minw = 3, scale = 0.4, minh = 0.6}),
+                    UIBox_button({col = true,label = {localize('b_add_joker')}, button = 'add_joker_ui', minw = 3, scale = 0.4, minh = 0.6, ref_table = {from_game_over}}),
                     UIBox_button({col = true,label = {localize('b_remove_joker')}, button = 'remove_joker', minw = 3, scale = 0.4, minh = 0.6}),
                 }},
                 {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
@@ -61,7 +155,7 @@ function G.UIDEF.missions(from_game_over)
     return t
 end
 
-function add_to_joker_party_cell(key, id)
+function add_to_joker_party_cell(key, id, do_add_jokers)
     local area = CardArea(
         G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h,
         G.CARD_W,
@@ -79,14 +173,14 @@ function add_to_joker_party_cell(key, id)
         {n=G.UIT.R, config={ref_table = card, r = 0.08, padding = 0.05, align = "bm", minw = 0.5 + G.CARD_W, minh = 0.8, colour = G.C.BLACK, func = 'can_add_joker_back'}, nodes={
             {n=G.UIT.C, config={align = "cm", padding = 0.05, minh = 0.8, minw = 0.4 + G.CARD_W}, nodes = {{n=G.UIT.O, config={object = area}}}},
         }},
-        {n=G.UIT.R, config={ref_table = card, r = 0.08, padding = 0.05, align = "bm", minw = 0.85, minh = 0.45, hover = true, shadow = true, colour = G.C.RED, one_press = true, button = 'add_joker', func = 'can_add_joker'}, nodes={
+        not do_add_jokers and {n=G.UIT.R, config={ref_table = card, r = 0.08, padding = 0.05, align = "bm", minw = 0.85, minh = 0.45, hover = true, shadow = true, colour = G.C.RED, one_press = true, button = 'add_joker', func = 'can_add_joker'}, nodes={
             {n=G.UIT.T, config={text = localize('b_add_joker'),colour = G.C.UI.TEXT_LIGHT, scale = 0.4, shadow = true}}
-        }},
+        }} or nil,
     }}
     return t
 end
 
-function create_UI_adding_jokers()
+function create_UI_adding_jokers(from_game_over, do_add_jokers)
     local cards = {}
     for i = 1, 10 do
         table.insert(cards, adding_jokers[i])
@@ -98,22 +192,22 @@ function create_UI_adding_jokers()
     end
     local t = {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes = {
         {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
-            add_to_joker_party_cell(cards[1], 'miss_cell_1'),
-            add_to_joker_party_cell(cards[2], 'miss_cell_2'),
-            add_to_joker_party_cell(cards[3], 'miss_cell_3'),
-            add_to_joker_party_cell(cards[4], 'miss_cell_4'),
-            add_to_joker_party_cell(cards[5], 'miss_cell_5'),
+            add_to_joker_party_cell(cards[1], 'miss_cell_1', do_add_jokers),
+            add_to_joker_party_cell(cards[2], 'miss_cell_2', do_add_jokers),
+            add_to_joker_party_cell(cards[3], 'miss_cell_3', do_add_jokers),
+            add_to_joker_party_cell(cards[4], 'miss_cell_4', do_add_jokers),
+            add_to_joker_party_cell(cards[5], 'miss_cell_5', do_add_jokers),
         }},
         {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
-            add_to_joker_party_cell(cards[6], 'miss_cell_6'),
-            add_to_joker_party_cell(cards[7], 'miss_cell_7'),
-            add_to_joker_party_cell(cards[8], 'miss_cell_8'),
-            add_to_joker_party_cell(cards[9], 'miss_cell_9'),
-            add_to_joker_party_cell(cards[10], 'miss_cell_0'),
+            add_to_joker_party_cell(cards[6], 'miss_cell_6', do_add_jokers),
+            add_to_joker_party_cell(cards[7], 'miss_cell_7', do_add_jokers),
+            add_to_joker_party_cell(cards[8], 'miss_cell_8', do_add_jokers),
+            add_to_joker_party_cell(cards[9], 'miss_cell_9', do_add_jokers),
+            add_to_joker_party_cell(cards[10], 'miss_cell_0', do_add_jokers),
         }},
         create_option_cycle({options = options, w = 5, opt_callback = 'adding_jokers_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = 1, colour = G.C.RED, no_pips = true})
     }}
-    return create_UIBox_generic_options({back_func = 'setup_run', contents = {t}})
+    return create_UIBox_generic_options({back_func = not do_add_jokers and (from_game_over and 'setup_run_game_over' or 'setup_run') or nil, contents = {t}})
 end
 
 function create_UIBox_notify_alert_party_joker(key)
@@ -225,7 +319,7 @@ end
 
 G.FUNCS.add_joker_ui = function(e)
     G.FUNCS.overlay_menu{
-        definition = create_UI_adding_jokers(),
+        definition = create_UI_adding_jokers(e.config.ref_table and e.config.ref_table[1], (e.config.id == 'no_adding_jokers')),
     }
 end
 
@@ -253,7 +347,11 @@ G.FUNCS.can_add_joker_back = function(e)
         G.PROFILES[G.SETTINGS.profile].mission_jokers = {}
     end
     if not e.config.ref_table or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers[e.config.ref_table.config.center.key] then
-        e.config.colour = G.C.BLACK
+        if e.config.ref_table and G.localization.descriptions.LockedJoker[e.config.ref_table.config.center.key] then
+            e.config.colour = G.C.BLACK
+        else
+            e.config.colour = G.C.RED
+        end
     else
         e.config.colour = G.C.GREEN
     end
@@ -288,7 +386,9 @@ G.FUNCS.adding_jokers_page = function(args)
     for i = 0, 9 do
         local joker_ui = G.OVERLAY_MENU:get_UIE_by_ID("miss_cell_" .. tostring(i))
         local area = joker_ui.children[1].children[1].children[1].config.object
-        joker_ui.children[2].config.ref_table = nil
+        if joker_ui.children[2] then
+            joker_ui.children[2].config.ref_table = nil
+        end
         joker_ui.children[1].config.ref_table = nil
         local j = (i == 0) and 10 or i
         local key = adding_jokers[(args.cycle_config.current_option - 1) * 10 + j]
@@ -301,7 +401,9 @@ G.FUNCS.adding_jokers_page = function(args)
                 card.ability.grayscaled = true
             end
             area:emplace(card)
-            joker_ui.children[2].config.ref_table = card
+            if joker_ui.children[2] then
+                joker_ui.children[2].config.ref_table = card
+            end
             joker_ui.children[1].config.ref_table = card
         end
     end
@@ -318,6 +420,14 @@ G.FUNCS.start_setup_mission = function(e)
             }
         },
     }})
+end
+
+G.FUNCS.setup_run_game_over = function(e)
+    G.SETTINGS.paused = true
+    G.FUNCS.overlay_menu{
+      definition = G.UIDEF.run_setup(true),
+    }
+    G.OVERLAY_MENU.config.no_esc = true
 end
 
 SMODS.Blind {
@@ -457,6 +567,29 @@ SMODS.Sticker {
     end,
 }
 
+SMODS.Sticker {
+    key = 'defended',
+    rate = 0,
+    pos = { x = 0, y = 0 },
+    atlas = "stickers",
+    colour = HEX '5999c7',
+    badge_colour = HEX '5999c7',
+    should_apply = function(self, card, center, area)
+        return false
+    end,
+    loc_txt = {
+        name = "Defended",
+        text = {
+            "{C:attention}Immune{} to {C:green}The{}",
+            "{C:green}Fading Fog{}"
+        },
+        label = "Defended"
+    },
+    loc_vars = function(self, info_queue, card)
+        return {vars = {}}
+    end,
+}
+
 SMODS.Shader {
     key = 'grayscale',
     path = 'grayscale.fs'
@@ -493,6 +626,20 @@ SMODS.DrawSteps['seal'].func = function(self, layer)
     old_seal(self, layer)
     if self.ability and self.ability.grayscaled then
         self.children.center:draw_shader('miss_grayscale', nil, self.ARGS.send_to_shader)
+    end
+end
+
+local old_score = SMODS.score_card
+function SMODS.score_card(card, context)
+    old_score(card, context)
+    if (card:get_id() == 8) and (card.seal == 'Purple') and card.edition and (card.edition.polychrome) and (card.ability.name == "Wild Card") and (card.base.suit == "Spades") then
+        G.E_MANAGER:add_event(Event({
+            trigger = 'immediate',
+            func = function()
+                unlock_party_joker('j_8_ball')
+                return true
+            end
+        }))
     end
 end
 

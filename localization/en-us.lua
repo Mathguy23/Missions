@@ -23,7 +23,33 @@ return {
                     "{C:red}Deleted{} in",
                     "{C:attention}#1#{} hands"
                 }
-            }
+            },
+            alpha_1 = {
+                name = "",
+                text = {
+                    "{C:blue}[Alpha]{}",
+                }
+            },
+            alpha_2 = {
+                name = "Alpha",
+                text = {
+                    "May be {C:attention}unlocked{}",
+                    "on {C:attention}any{} Mission"
+                }
+            },
+            beta_1 = {
+                name = "",
+                text = {
+                    "{C:green}[Beta]{}",
+                }
+            },
+            beta_2 = {
+                name = "Beta",
+                text = {
+                    "May be {C:attention}unlocked{} on",
+                    "{C:green}The Fading Fog{}"
+                }
+            },
         },
         Enhanced = {
 
@@ -122,6 +148,55 @@ return {
                     "{C:green}rerolled{}"
                 }
             },
+            j_8_ball = {
+                text = {
+                    "{C:attention}Score{} a {C:dark_edition}Polychrome{}",
+                    "{C:tarot}Purple Sealed{} {C:attention}Wild{}",
+                    "{C:attention}8{} of {C:spades}Spades{}"
+                }
+            },
+            j_mr_bones = {
+                text = {
+                    "{C:red}Fail{} a {C:attention}Finale{} blind",
+                    "by {C:attention}1%{} blind size",
+                    "or less"
+                }
+            },
+            j_faceless = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "while never having",
+                    "{C:attention}jokers{} with a {C:attention}face{}"
+                }
+            },
+            j_ramen = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "with {C:attention}750{} or more",
+                    "cards {C:red}discarded{}"
+                }
+            },
+            j_hanging_chad = {
+                text = {
+                    "{C:attention}Trigger{} the same card",
+                    "{C:attention}100{} times without",
+                    "{C:attention}winning{} the run"
+                }
+            },
+            j_sly = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "with {C:attention}80{} or more",
+                    "{C:attention}Pairs{} played"
+                }
+            },
+            j_jolly = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "playing only {C:attention}hands{} not",
+                    "containing a {C:attention}Pair{}"
+                }
+            },
             tbd = {
                 text = {
                     "To be",
@@ -138,6 +213,9 @@ return {
             k_available_ex = "Available!",
             m_covert_chasm = "The Covert Chasm",
             m_fading_fog = "The Fading Fog",
+            alpha = "Alpha",
+            k_beta = "Beta",
+            b_miss_locked_jokers = "Party Jokers",
         },
         v_text = {
             

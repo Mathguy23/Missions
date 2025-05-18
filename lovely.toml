@@ -35,7 +35,7 @@ payload = '''if (G.PROFILES[G.SETTINGS.profile].mission_jokers) and (v.id == 'mi
             func = function()
                 local card = add_joker(j, nil)
                 if v.mission_id == 2 then
-                    card:set_eternal(true)
+                    card.ability.miss_defended = true
                 end
                 return true
             end
@@ -146,6 +146,10 @@ position = 'before'
 payload = '''elseif (_c.set == 'Joker') and card and card.ability and card.ability.grayscaled then
     if G.localization.descriptions.LockedJoker[_c.key] then
         localize{type = 'descriptions', key = _c.key, set = 'LockedJoker', nodes = desc_nodes, vars = specific_vars or {}}
+        local texts = {'alpha', 'beta'}
+        local tier = miss_joker_tiers[_c.key] or 1
+        localize{type = 'descriptions', key = texts[tier] .. '_1', set = 'Other', nodes = desc_nodes}
+        info_queue[#info_queue + 1] = {key = texts[tier] .. '_2', set = 'Other'}
     else
         localize{type = 'descriptions', key = 'tbd', set = 'LockedJoker', nodes = desc_nodes, vars = specific_vars or {}}
     end'''
@@ -181,6 +185,8 @@ payload = '''miss_unlock_trackers = {
     skippedskip = false,
     discarded = false,
     nonfivecardhand = false,
+    nofacedjokers = true,
+    nopairhands = true,
 },
 miss_funds = {
     curr_dollars = 0,
@@ -228,13 +234,23 @@ match_indent = true
 target = 'functions/state_events.lua'
 pattern = '''local game_over = true'''
 position = 'before'
-payload = '''if G.GAME.blind and G.GAME.blind.name == 'The Plant' then
+payload = '''G.GAME.miss_unlock_trackers.per_round = {}
+G.GAME.miss_round_update = true'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''if game_over then'''
+position = 'before'
+payload = '''if not game_over and (G.GAME.chips >= G.GAME.blind.chips) and G.GAME.blind and G.GAME.blind.name == 'The Plant' then
     if (G.GAME.miss_unlock_trackers.per_round['nonface'] == nil) or (G.GAME.miss_unlock_trackers.per_round['nonface'] == 0) then
         unlock_party_joker('j_pareidolia')
     end
 end
-G.GAME.miss_unlock_trackers.per_round = {}
-G.GAME.miss_round_update = true'''
+if game_over and (G.GAME.chips >= 0.99 * G.GAME.blind.chips) and (G.GAME.chips < G.GAME.blind.chips) and G.GAME.blind and ((G.GAME.blind.name == 'Scorched Acorn') or (G.GAME.blind.name == 'Existential Eraser')) then
+    unlock_party_joker('j_mr_bones')
+end'''
 match_indent = true
 
 [[patches]]
@@ -273,6 +289,18 @@ payload = '''   if G.GAME.modifiers.mission then
     end
     if G.GAME.round_scores.times_rerolled.amt >= 75 then
         unlock_party_joker('j_chaos')
+    end
+    if G.GAME.miss_unlock_trackers.nofacedjokers then
+        unlock_party_joker('j_faceless')
+    end
+    if G.GAME.round_scores.cards_discarded.amt >= 750 then
+        unlock_party_joker('j_ramen')
+    end
+    if G.GAME.hands['Pair'].played >= 80 then
+        unlock_party_joker('j_sly')
+    end
+    if G.GAME.miss_unlock_trackers.nopairhands then
+        unlock_party_joker('j_jolly')
     end
 end'''
 match_indent = true
@@ -324,12 +352,12 @@ pattern = '''if G.GAME.blind and G.boss_throw_hand and self.STATE == self.STATES
 position = 'before'
 payload = '''if (G.GAME and G.GAME.modifiers and (G.GAME.modifiers.mission == 2)) and G.jokers then
     for i = 1, #G.jokers.cards do
-        if G.jokers.cards[i] and not G.jokers.cards[i].ability.eternal and not G.jokers.cards[i].ability.death_timer then
+        if G.jokers.cards[i] and not (G.jokers.cards[i].ability.eternal or G.jokers.cards[i].ability.miss_defended) and not G.jokers.cards[i].ability.death_timer then
             G.jokers.cards[i].ability.death_timer = 3
         end
     end
     for i = 1, #G.consumeables.cards do
-        if G.consumeables.cards[i] and not G.consumeables.cards[i].ability.eternal and not G.consumeables.cards[i].ability.death_timer then
+        if G.consumeables.cards[i] and not (G.consumeables.cards[i].ability.eternal or G.consumeables.cards[i].ability.miss_defended) and not G.consumeables.cards[i].ability.death_timer then
             G.consumeables.cards[i].ability.death_timer = 3
         end
     end
@@ -346,7 +374,7 @@ if G.GAME.miss_round_update and (#G.GAME.miss_funds > 0) then
 end
 if G.GAME.miss_round_update or G.GAME.miss_hand_update then
     for i = #G.jokers.cards, 1, -1 do
-        if G.jokers.cards[i] and not G.jokers.cards[i].ability.eternal and G.jokers.cards[i].ability.death_timer then
+        if G.jokers.cards[i] and not (G.jokers.cards[i].ability.eternal or G.jokers.cards[i].ability.miss_defended) and G.jokers.cards[i].ability.death_timer then
             G.jokers.cards[i].ability.death_timer = (G.jokers.cards[i].ability.death_timer or 3) - 1
             if G.jokers.cards[i].ability.death_timer == 0 then
                 G.jokers.cards[i]:remove()
@@ -354,7 +382,7 @@ if G.GAME.miss_round_update or G.GAME.miss_hand_update then
         end
     end
     for i = #G.consumeables.cards, 1, -1 do
-        if G.consumeables.cards[i] and not G.consumeables.cards[i].ability.eternal and G.consumeables.cards[i].ability.consumeable and G.consumeables.cards[i].ability.death_timer then
+        if G.consumeables.cards[i] and not (G.consumeables.cards[i].ability.eternal or G.consumeables.cards[i].ability.miss_defended) and G.consumeables.cards[i].ability.consumeable and G.consumeables.cards[i].ability.death_timer then
             G.consumeables.cards[i].ability.death_timer = (G.consumeables.cards[i].ability.death_timer or 3) - 1
             if G.consumeables.cards[i].ability.death_timer == 0 then
                 G.consumeables.cards[i]:remove()
@@ -374,10 +402,10 @@ if (G.GAME and G.GAME.modifiers and (G.GAME.modifiers.mission == 2)) and (G.GAME
         else
             while (change < to_big(0)) and (#G.GAME.miss_funds > 0) do
                 if -change >= to_big(G.GAME.miss_funds[#G.GAME.miss_funds][1]) then
-                    change = change + G.GAME.miss_funds[#G.GAME.miss_funds][1]
-                    G.GAME.miss_funds[#G.GAME.miss_funds] = nil
+                    change = change + G.GAME.miss_funds[1][1]
+                    table.remove(G.GAME.miss_funds, 1)
                 else
-                    G.GAME.miss_funds[#G.GAME.miss_funds][1] = to_big(G.GAME.miss_funds[#G.GAME.miss_funds][1]) + change
+                    G.GAME.miss_funds[1][1] = to_big(G.GAME.miss_funds[1][1]) + change
                     change = to_big(0)
                 end
             end
@@ -387,11 +415,11 @@ if (G.GAME and G.GAME.modifiers and (G.GAME.modifiers.mission == 2)) and (G.GAME
             G.GAME.miss_funds[#G.GAME.miss_funds + 1] = {change, 3}
         else
             while (change < 0) and (#G.GAME.miss_funds > 0) do
-                if -change >= G.GAME.miss_funds[#G.GAME.miss_funds][1] then
-                    change = change + G.GAME.miss_funds[#G.GAME.miss_funds][1]
-                    G.GAME.miss_funds[#G.GAME.miss_funds] = nil
+                if -change >= G.GAME.miss_funds[1][1] then
+                    change = change + G.GAME.miss_funds[1][1]
+                    table.remove(G.GAME.miss_funds, 1)
                 else
-                    G.GAME.miss_funds[#G.GAME.miss_funds][1] = G.GAME.miss_funds[#G.GAME.miss_funds][1] + change
+                    G.GAME.miss_funds[1][1] = G.GAME.miss_funds[1][1] + change
                     change = 0
                 end
             end
@@ -435,6 +463,9 @@ pattern = '''G.GAME.hands[text].played = G.GAME.hands[text].played + 1'''
 position = 'before'
 payload = '''if #scoring_hand ~= 5 then
     G.GAME.miss_unlock_trackers.nonfivecardhand = true
+end
+if poker_hands['Pair'] then
+    G.GAME.miss_unlock_trackers.nopairhands = nil
 end'''
 match_indent = true
 
@@ -453,4 +484,47 @@ G.E_MANAGER:add_event(Event({
             return true
         end
     }))'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'back.lua'
+pattern = '''name_to_check == 'Challenge Deck' and UIBox_button({button = 'deck_view_challenge', label = {localize(challenge.id, 'challenge_names')},  minw = 2.2, minh = 1, scale = 0.6, id = challenge})'''
+position = 'after'
+payload = '''or (name_to_check == 'Mission Deck') and UIBox_button({button = 'add_joker_ui', label = {localize('b_miss_locked_jokers')},  minw = 2.2, minh = 1, scale = 0.6, id = 'no_adding_jokers'})'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'cardarea.lua'
+pattern = '''if self == G.jokers then'''
+position = 'after'
+payload = '''   if G.GAME.modifiers and G.GAME.modifiers.mission and G.GAME.miss_unlock_trackers.nofacedjokers then
+    if card and card.config and card.config.center and card.config.center.key and jokers_with_face[card.config.center.key] then
+        G.GAME.miss_unlock_trackers.nofacedjokers = nil
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''local ret = {}'''
+position = 'after'
+payload = '''if card.playing_card and context.main_scoring and not card.debuff and (card.area == G.play) then
+    if not card.ability.times_triggered then
+        card.ability.times_triggered = 1
+    else
+        card.ability.times_triggered = card.ability.times_triggered + 1
+        if (card.ability.times_triggered >= 100) and not G.GAME.won then
+            G.E_MANAGER:add_event(Event({
+                trigger = 'immediate',
+                func = function()
+                    unlock_party_joker('j_hanging_chad')
+                    return true
+                end
+            }))
+        end
+    end
+end'''
 match_indent = true
