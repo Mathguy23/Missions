@@ -78,7 +78,22 @@ match_indent = true
 target = 'card.lua'
 pattern = '''if self.ability and self.ability.perma_debuff then self.debuff = true end'''
 position = 'after'
-payload = '''if self.ability and self.ability.miss_obscured and (self.facing == 'front') then self.facing = 'back';self.sprite_facing = 'back' end'''
+payload = '''if self.ability and self.ability.miss_obscured and (self.facing == 'front') then self.facing = 'back';self.sprite_facing = 'back' end
+if self and self.ability and (self.ability.set == 'Tarot') and (self.area == G.consumeables) and G.GAME and G.GAME.modifiers and G.GAME.modifiers.mission and not self.ability.miss_generated then
+    self.ability.miss_generated = true
+    if G.GAME.facing_blind then
+        if not G.GAME.miss_unlock_trackers.per_round.used_tarots then
+            G.GAME.miss_unlock_trackers.per_round.used_tarots = {count = 0}
+        end
+        if not G.GAME.miss_unlock_trackers.per_round.used_tarots[self.config.center.key] then
+            G.GAME.miss_unlock_trackers.per_round.used_tarots[self.config.center.key] = true
+            G.GAME.miss_unlock_trackers.per_round.used_tarots.count = G.GAME.miss_unlock_trackers.per_round.used_tarots.count + 1
+            if G.GAME.miss_unlock_trackers.per_round.used_tarots.count >= 22 then
+                unlock_party_joker('j_superposition')
+            end
+        end
+    end
+end'''
 match_indent = true
 
 [[patches]]
@@ -516,7 +531,7 @@ payload = '''if card.playing_card and context.main_scoring and not card.debuff a
         card.ability.times_triggered = 1
     else
         card.ability.times_triggered = card.ability.times_triggered + 1
-        if (card.ability.times_triggered >= 100) and not G.GAME.won then
+        if (card.ability.times_triggered >= 50) and not G.GAME.won then
             G.E_MANAGER:add_event(Event({
                 trigger = 'immediate',
                 func = function()
@@ -526,5 +541,29 @@ payload = '''if card.playing_card and context.main_scoring and not card.debuff a
             }))
         end
     end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if self.ability.name == 'To Do List' and context.scoring_name == self.ability.to_do_poker_hand then'''
+position = 'before'
+payload = '''if true and (self.ability.name == 'To Do List' and context.scoring_name == self.ability.to_do_poker_hand) then
+    if not self.ability.miss_successive then
+        self.ability.miss_successive = 0
+    end
+    self.ability.miss_successive = self.ability.miss_successive + 1
+    if self.ability.miss_successive >= 16 then
+        G.E_MANAGER:add_event(Event({
+            trigger = 'immediate',
+            func = function()
+                unlock_party_joker('j_todo_list')
+                return true
+            end
+        }))
+    end
+elseif self.ability.name == 'To Do List' then
+    self.ability.miss_successive = 0
 end'''
 match_indent = true

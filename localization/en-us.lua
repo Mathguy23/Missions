@@ -179,7 +179,7 @@ return {
             j_hanging_chad = {
                 text = {
                     "{C:attention}Trigger{} the same card",
-                    "{C:attention}100{} times without",
+                    "{C:attention}50{} times without",
                     "{C:attention}winning{} the run"
                 }
             },
@@ -195,6 +195,19 @@ return {
                     "{C:green}Accomplish{} a {C:attention}Mission{}",
                     "playing only {C:attention}hands{} not",
                     "containing a {C:attention}Pair{}"
+                }
+            },
+            j_superposition = {
+                text = {
+                    "Create {C:attention}22{} unique {C:tarot}Tarot{}",
+                    "cards in a single",
+                    "{C:attention}blind{}"
+                }
+            },
+            j_todo_list = {
+                text = {
+                    "Trigger {C:attention}To Do List{}",
+                    "{C:attention}16{} times {C:attention}in a row{}",
                 }
             },
             tbd = {

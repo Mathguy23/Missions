@@ -4,7 +4,7 @@
 --- PREFIX: miss
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Balatro: Missions Gamemode
---- VERSION: 1.1.1
+--- VERSION: 1.1.2
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -26,7 +26,8 @@ local adding_jokers = {
 }
 
 miss_joker_tiers = {
-
+    j_superposition = 2,
+    j_todo_list = 2,
 }
 
 jokers_with_face = {
@@ -308,6 +309,9 @@ function notify_alert_party_joker(key)
 end
 
 function unlock_party_joker(key)
+    if not G.GAME or not G.GAME.modifiers or not G.GAME.modifiers.mission or (G.GAME.modifiers.mission < (miss_joker_tiers[key] or 1)) then
+        return
+    end
     if not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers then
         G.PROFILES[G.SETTINGS.profile].ready_mission_jokers = {}
     end
