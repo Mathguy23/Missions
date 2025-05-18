@@ -464,7 +464,7 @@ position = 'before'
 payload = '''if #scoring_hand ~= 5 then
     G.GAME.miss_unlock_trackers.nonfivecardhand = true
 end
-if poker_hands['Pair'] then
+if poker_hands['Pair'] and next(poker_hands['Pair']) then
     G.GAME.miss_unlock_trackers.nopairhands = nil
 end'''
 match_indent = true
