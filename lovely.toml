@@ -202,6 +202,8 @@ payload = '''miss_unlock_trackers = {
     nonfivecardhand = false,
     nofacedjokers = true,
     nopairhands = true,
+    matadorcheck = true,
+    nononcommonjokers = true,
 },
 miss_funds = {
     curr_dollars = 0,
@@ -249,8 +251,59 @@ match_indent = true
 target = 'functions/state_events.lua'
 pattern = '''local game_over = true'''
 position = 'before'
-payload = '''G.GAME.miss_unlock_trackers.per_round = {}
-G.GAME.miss_round_update = true'''
+payload = '''if (G.GAME.current_round.hands_played ~= 1) and (G.GAME.blind_on_deck == "Boss") then
+    G.GAME.miss_unlock_trackers.matadorcheck = nil
+end
+G.GAME.miss_unlock_trackers.per_round = {}
+G.GAME.miss_round_update = true
+if G.GAME and G.GAME.modifiers and (G.GAME.modifiers.mission == 3) then
+    local infect = 0
+    local pool = {}
+    for i = 1, #G.playing_cards do
+        if G.playing_cards[i].ability.miss_infected then
+            infect = infect + 1
+        else
+            table.insert(pool, G.playing_cards[i])
+        end
+    end
+    pseudoshuffle(pool, pseudoseed('spread_infection_shuffle'))
+    local odds = 0.2 * (1 - (infect/ #G.playing_cards))
+    local infects = 0
+    for i = 1, infect do
+        if pseudorandom('spread_infection') < odds then
+            infects = infects + 1
+        end
+    end
+    for i = 1, math.max(1, math.min(#pool, infects)) do
+        pool[i].ability.miss_infected = true
+    end
+    local infect_table = {}
+    for j, k in ipairs({G.jokers, G.hand}) do
+        for i = 1, #k.cards do
+            if k.cards[i].ability.miss_infected and (pseudorandom('spread_infection') < 0.5) then
+                if i == 1 then
+                    infect_table[2] = true
+                elseif i == #k.cards then
+                    infect_table[#k.cards - 1] = true
+                elseif infect_table[i + 1] then
+                    infect_table[i - 1] = true
+                elseif infect_table[i - 1] then
+                    infect_table[i + 1] = true
+                elseif (pseudorandom('spread_direction') < 0.5) then
+                    infect_table[i - 1] = true
+                else
+                    infect_table[i + 1] = true
+                end
+            end
+        end
+        for i = 1, #k.cards do
+            if infect_table[i] then
+                k.cards[i]:juice_up()
+                k.cards[i].ability.miss_infected = true
+            end
+        end
+    end
+end'''
 match_indent = true
 
 [[patches]]
@@ -316,6 +369,12 @@ payload = '''   if G.GAME.modifiers.mission then
     end
     if G.GAME.miss_unlock_trackers.nopairhands then
         unlock_party_joker('j_jolly')
+    end
+    if G.GAME.miss_unlock_trackers.matadorcheck then
+        unlock_party_joker('j_matador')
+    end
+    if G.GAME.miss_unlock_trackers.nononcommonjokers then
+        unlock_party_joker('j_riff_raff')
     end
 end'''
 match_indent = true
@@ -515,10 +574,15 @@ target = 'cardarea.lua'
 pattern = '''if self == G.jokers then'''
 position = 'after'
 payload = '''   if G.GAME.modifiers and G.GAME.modifiers.mission and G.GAME.miss_unlock_trackers.nofacedjokers then
-    if card and card.config and card.config.center and card.config.center.key and jokers_with_face[card.config.center.key] then
-        G.GAME.miss_unlock_trackers.nofacedjokers = nil
+        if card and card.config and card.config.center and card.config.center.key and jokers_with_face[card.config.center.key] then
+            G.GAME.miss_unlock_trackers.nofacedjokers = nil
+        end
     end
-end'''
+    if G.GAME.modifiers and G.GAME.modifiers.mission and G.GAME.miss_unlock_trackers.nononcommonjokers then
+        if card and card.config and card.config.center and (card.config.center.rarity ~= 1)  then
+            G.GAME.miss_unlock_trackers.nononcommonjokers = nil
+        end
+    end'''
 match_indent = true
 
 [[patches]]
@@ -554,7 +618,7 @@ payload = '''if true and (self.ability.name == 'To Do List' and context.scoring_
         self.ability.miss_successive = 0
     end
     self.ability.miss_successive = self.ability.miss_successive + 1
-    if self.ability.miss_successive >= 16 then
+    if self.ability.miss_successive >= 10 then
         G.E_MANAGER:add_event(Event({
             trigger = 'immediate',
             func = function()
@@ -566,4 +630,120 @@ payload = '''if true and (self.ability.name == 'To Do List' and context.scoring_
 elseif self.ability.name == 'To Do List' then
     self.ability.miss_successive = 0
 end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''check_for_unlock({type = 'hand_contents', cards = G.play.cards})'''
+position = 'after'
+payload = '''local left_play = 0
+for i = 1, #G.play.cards do
+    if G.play.cards[i].ability.miss_infected then
+        local card = G.play.cards[i]
+        if pseudorandom('infected') < 0.3 then
+            local change = pseudorandom('infected_change')
+            G.E_MANAGER:add_event(Event({
+                trigger = 'immediate',
+                func = function()
+                    card:flip()
+                    return true
+                end
+            }))
+            delay(0.3)
+            G.E_MANAGER:add_event(Event({
+                trigger = 'immediate',
+                func = function()
+                    play_sound('tarot1', math.random()*0.1 + 0.55, 0.42)
+                    if change < 0.25 then
+                        SMODS.modify_rank(card, 1)
+                    elseif change < 0.5 then
+                        SMODS.modify_rank(card, -1)
+                    else
+                        local suits = {}
+                        for i2, j2 in pairs(SMODS.Suits) do
+                            if (card.base.suit ~= i2) and (not j2.in_pool or j2:in_pool()) then
+                                table.insert(suits, i2)
+                            end
+                        end
+                        local suit = pseudorandom_element(suits, pseudoseed('infected_change_suit'))
+                        SMODS.change_base(card, suit)
+                    end
+                    card:juice_up()
+                    return true
+                end
+            }))
+            delay(0.3)
+            G.E_MANAGER:add_event(Event({
+                trigger = 'immediate',
+                func = function()
+                    card:flip()
+                    return true
+                end
+            }))
+        elseif (pseudorandom('infected') < 1/7) and (left_play < #G.play.cards - 1) then
+            draw_card(G.play, G.hand, i*100/#G.play.cards, 'up', nil, card)
+            left_play = left_play + 1
+        end
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if self.ability.set == "Joker" then'''
+position = 'before'
+payload = '''if (self.ability.set == "Joker") and self.ability.miss_infected and (pseudorandom('infected') < 0.5) then
+    return
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''function copy_card(other, new_card, card_scale, playing_card, strip_edition)'''
+position = 'after'
+payload = '''if new_card and new_card.ability then
+    new_card.ability.miss_infected = nil
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if self.ability.x_mult - self.ability.extra <= 1 then'''
+position = 'after'
+payload = '''   if G.GAME and G.GAME.modifiers and G.GAME.modifiers.mission then
+        G.GAME.miss_unlock_trackers.per_round.ramen_eaten = true
+        if G.GAME.miss_unlock_trackers.per_round.ramen_eaten and G.GAME.miss_unlock_trackers.per_round.ice_cream_eaten and G.GAME.miss_unlock_trackers.per_round.seltzer_drank then
+            unlock_party_joker('j_gros_michel')
+        end
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if self.ability.extra.chips - self.ability.extra.chip_mod <= 0 then'''
+position = 'after'
+payload = '''   if G.GAME and G.GAME.modifiers and G.GAME.modifiers.mission then
+        G.GAME.miss_unlock_trackers.per_round.ice_cream_eaten = true
+        if G.GAME.miss_unlock_trackers.per_round.ramen_eaten and G.GAME.miss_unlock_trackers.per_round.ice_cream_eaten and G.GAME.miss_unlock_trackers.per_round.seltzer_drank then
+            unlock_party_joker('j_gros_michel')
+        end
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if self.ability.extra - 1 <= 0 then'''
+position = 'after'
+payload = '''   if G.GAME and G.GAME.modifiers and G.GAME.modifiers.mission then
+        G.GAME.miss_unlock_trackers.per_round.seltzer_drank = true
+        if G.GAME.miss_unlock_trackers.per_round.ramen_eaten and G.GAME.miss_unlock_trackers.per_round.ice_cream_eaten and G.GAME.miss_unlock_trackers.per_round.seltzer_drank then
+            unlock_party_joker('j_gros_michel')
+        end
+    end'''
 match_indent = true

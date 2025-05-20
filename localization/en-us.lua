@@ -47,9 +47,24 @@ return {
                 name = "Beta",
                 text = {
                     "May be {C:attention}unlocked{} on",
-                    "{C:green}The Fading Fog{}"
+                    "{C:green}The Fading Fog{}",
+                    "or higher"
                 }
             },
+            gamma_1 = {
+                name = "Gamma",
+                text = {
+                    "{C:green}[Gamma]{}",
+                }
+            },
+            gamma_2 = {
+                name = "Gamma",
+                text = {
+                    "May be {C:attention}unlocked{} on",
+                    "{C:green}The Viral Valley{}",
+                }
+            },
+
         },
         Enhanced = {
 
@@ -207,7 +222,28 @@ return {
             j_todo_list = {
                 text = {
                     "Trigger {C:attention}To Do List{}",
-                    "{C:attention}16{} times {C:attention}in a row{}",
+                    "{C:attention}10{} times {C:attention}in a row{}",
+                }
+            },
+            j_gros_michel = {
+                text = {
+                    "Consume {C:attention}Ramen{}, {C:attention}Ice Cream{},",
+                    "and {C:attention}Setlzer{} in a single",
+                    "blind"
+                }
+            },
+            j_matador = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "defeating each {C:attention}Boss{}",
+                    "{C:attention}Blind{} in {C:blue}1{} hand"
+                }
+            },
+            j_riff_raff = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "while never having",
+                    "{C:blue}non-common{} {C:attention}jokers{}"
                 }
             },
             tbd = {
@@ -216,18 +252,46 @@ return {
                     "Determined"
                 }
             }
+        },
+        Missions = {
+            m_covert_chasm = {
+                text = {
+                    "By Ante 3, cards may be drawn face down",
+                    "By Ante 4, cards in shop may be face down",
+                    "Ante 4 blind is Amber Acorn",
+                    "Ante 8 blind is ???????"
+                }
+            },
+            m_fading_fog = {
+                text = {
+                    "Jokers and Consumables delete after 3 rounds",
+                    "Each dollar can only last for 3 rounds",
+                    "Older dollars are spent before newer ones",
+                    "Ante 4 blind is Ebony Eraser",
+                    "Ante 8 blind is ???????"
+                }
+            },
+            m_viral_valley = {
+                text = {
+                    "Start with 3 Infected playing cards",
+                    "Ante 4 blind is Periwinkle Pathogen",
+                    "Ante 8 blind is ???????"
+                }
+            },
         }
     },
     misc = {
         dictionary = {
             b_missions = "Missions",
             b_add_joker = "Add Joker",
-            b_remove_joker = "Remove Jokers",
+            b_remove_joker = "Remove Leftmost",
             k_available_ex = "Available!",
             m_covert_chasm = "The Covert Chasm",
             m_fading_fog = "The Fading Fog",
+            m_viral_valley = "The Viral Valley",
             alpha = "Alpha",
             k_beta = "Beta",
+            k_gamma = "Gamma",
             b_miss_locked_jokers = "Party Jokers",
         },
         v_text = {

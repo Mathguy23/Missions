@@ -4,7 +4,7 @@
 --- PREFIX: miss
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Balatro: Missions Gamemode
---- VERSION: 1.1.2
+--- VERSION: 1.2.0
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -13,6 +13,10 @@ SMODS.Atlas({ key = "blinds", atlas_table = "ANIMATION_ATLAS", path = "blinds.pn
 SMODS.Atlas({ key = "blinds2", atlas_table = "ANIMATION_ATLAS", path = "blinds2.png", px = 34, py = 34, frames = 21 })
 
 SMODS.Atlas({ key = "blinds3", atlas_table = "ANIMATION_ATLAS", path = "blinds3.png", px = 34, py = 34, frames = 21 })
+
+SMODS.Atlas({ key = "blinds4", atlas_table = "ANIMATION_ATLAS", path = "blinds4.png", px = 34, py = 34, frames = 21 })
+
+SMODS.Atlas({ key = "blinds5", atlas_table = "ANIMATION_ATLAS", path = "blinds5.png", px = 34, py = 34, frames = 21 })
 
 SMODS.Atlas({ key = "decks", atlas_table = "ASSET_ATLAS", path = "decks.png", px = 71, py = 95})
 
@@ -28,6 +32,8 @@ local adding_jokers = {
 miss_joker_tiers = {
     j_superposition = 2,
     j_todo_list = 2,
+    j_matador = 2,
+    j_riff_raff = 2,
 }
 
 jokers_with_face = {
@@ -118,7 +124,15 @@ jokers_with_face = {
     j_perkeo = true,
 }
 
+local mission_area = nil
+local mission_desc_nodes = {}
+
 function G.UIDEF.missions(from_game_over)
+
+    G.PROFILES[G.SETTINGS.profile].selected_mission = G.PROFILES[G.SETTINGS.profile].selected_mission or 1
+    local a = {localize('m_covert_chasm'), localize('m_fading_fog'), localize('m_viral_valley')}
+    local b = {'m_covert_chasm', 'm_fading_fog', 'm_viral_valley'}
+    miss_selected_text = {a[G.PROFILES[G.SETTINGS.profile].selected_mission]}
 
     local area = CardArea(
         G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h,
@@ -135,8 +149,20 @@ function G.UIDEF.missions(from_game_over)
         area:emplace(card)
     end
 
+    mission_area = area
+
+    for i, j in pairs(mission_desc_nodes) do
+        mission_desc_nodes[i] = nil
+    end
+    for i, j in ipairs(localize{type = 'raw_descriptions', key = b[G.PROFILES[G.SETTINGS.profile].selected_mission], set = "Missions"}) do
+        table.insert(mission_desc_nodes, j)
+    end
+
     local t = {n=G.UIT.ROOT, config={align = "cm", padding = 0.1, colour = G.C.CLEAR, minh = 8, minw = 7}, nodes={
             {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR}, nodes = {
+                {n=G.UIT.R, config={align = "cm", padding = 0.3, colour = G.C.BLACK, r = 0.1}, nodes={
+                    {n=G.UIT.T, config={ref_table = miss_selected_text, ref_value = 1, scale = 0.75, colour = G.C.UI.TEXT_LIGHT, shadow = true}},
+                }},
                 {n=G.UIT.R, config={align = "cm", padding = 0.3}, nodes={
                     {n=G.UIT.O, config={object = DynaText({string = 'Joker Party', colours = {G.C.UI.TEXT_LIGHT}, bump = true, scale = 0.6})}}
                 }},
@@ -144,19 +170,19 @@ function G.UIDEF.missions(from_game_over)
                     {n=G.UIT.C, config={align = "cm", padding = 0, minh = 0.8, minw = 0.4 + (5.25)*G.CARD_W}, nodes = {{n=G.UIT.O, config={object = area}}}},
                 }},
                 {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
-                    UIBox_button({col = true,label = {localize('b_add_joker')}, button = 'add_joker_ui', minw = 3, scale = 0.4, minh = 0.6, ref_table = {from_game_over}}),
-                    UIBox_button({col = true,label = {localize('b_remove_joker')}, button = 'remove_joker', minw = 3, scale = 0.4, minh = 0.6}),
+                    UIBox_button({col = true,label = {localize('b_add_joker')}, button = 'add_joker_ui', func = 'can_add_joker_ui',minw = 3, scale = 0.4, minh = 0.6, ref_table = {from_game_over}}),
+                    UIBox_button({col = true,label = {localize('b_remove_joker')}, button = 'remove_joker', func = 'can_remove_joker', minw = 3, scale = 0.4, minh = 0.6}),
                 }},
                 {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
                     UIBox_button({label = {localize('b_play_cap')}, button = 'start_setup_mission', minw = 3, scale = 0.6, minh = 0.8, colour = G.C.BLUE}),
                 }},
-                create_option_cycle({options = {localize('m_covert_chasm'), localize('m_fading_fog')}, scale = 0.6, w = 4, opt_callback = 'mission_stake_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = miss_stake_page, colour = G.C.RED, no_pips = true})
+                create_option_cycle({options = a, scale = 0.6, w = 4, opt_callback = 'mission_stake_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = G.PROFILES[G.SETTINGS.profile].selected_mission, colour = G.C.RED, on_demand_tooltip = {text = mission_desc_nodes}})
         }}}
     }
     return t
 end
 
-function add_to_joker_party_cell(key, id, do_add_jokers)
+function add_to_joker_party_cell(key, id, do_add_jokers, from_game_over)
     local area = CardArea(
         G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h,
         G.CARD_W,
@@ -174,7 +200,7 @@ function add_to_joker_party_cell(key, id, do_add_jokers)
         {n=G.UIT.R, config={ref_table = card, r = 0.08, padding = 0.05, align = "bm", minw = 0.5 + G.CARD_W, minh = 0.8, colour = G.C.BLACK, func = 'can_add_joker_back'}, nodes={
             {n=G.UIT.C, config={align = "cm", padding = 0.05, minh = 0.8, minw = 0.4 + G.CARD_W}, nodes = {{n=G.UIT.O, config={object = area}}}},
         }},
-        not do_add_jokers and {n=G.UIT.R, config={ref_table = card, r = 0.08, padding = 0.05, align = "bm", minw = 0.85, minh = 0.45, hover = true, shadow = true, colour = G.C.RED, one_press = true, button = 'add_joker', func = 'can_add_joker'}, nodes={
+        not do_add_jokers and {n=G.UIT.R, config={ref_table = {card, from_game_over}, r = 0.08, padding = 0.05, align = "bm", minw = 0.85, minh = 0.45, hover = true, shadow = true, colour = G.C.RED, one_press = true, button = 'add_joker', func = 'can_add_joker'}, nodes={
             {n=G.UIT.T, config={text = localize('b_add_joker'),colour = G.C.UI.TEXT_LIGHT, scale = 0.4, shadow = true}}
         }} or nil,
     }}
@@ -193,18 +219,18 @@ function create_UI_adding_jokers(from_game_over, do_add_jokers)
     end
     local t = {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes = {
         {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
-            add_to_joker_party_cell(cards[1], 'miss_cell_1', do_add_jokers),
-            add_to_joker_party_cell(cards[2], 'miss_cell_2', do_add_jokers),
-            add_to_joker_party_cell(cards[3], 'miss_cell_3', do_add_jokers),
-            add_to_joker_party_cell(cards[4], 'miss_cell_4', do_add_jokers),
-            add_to_joker_party_cell(cards[5], 'miss_cell_5', do_add_jokers),
+            add_to_joker_party_cell(cards[1], 'miss_cell_1', do_add_jokers, from_game_over),
+            add_to_joker_party_cell(cards[2], 'miss_cell_2', do_add_jokers, from_game_over),
+            add_to_joker_party_cell(cards[3], 'miss_cell_3', do_add_jokers, from_game_over),
+            add_to_joker_party_cell(cards[4], 'miss_cell_4', do_add_jokers, from_game_over),
+            add_to_joker_party_cell(cards[5], 'miss_cell_5', do_add_jokers, from_game_over),
         }},
         {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
-            add_to_joker_party_cell(cards[6], 'miss_cell_6', do_add_jokers),
-            add_to_joker_party_cell(cards[7], 'miss_cell_7', do_add_jokers),
-            add_to_joker_party_cell(cards[8], 'miss_cell_8', do_add_jokers),
-            add_to_joker_party_cell(cards[9], 'miss_cell_9', do_add_jokers),
-            add_to_joker_party_cell(cards[10], 'miss_cell_0', do_add_jokers),
+            add_to_joker_party_cell(cards[6], 'miss_cell_6', do_add_jokers, from_game_over),
+            add_to_joker_party_cell(cards[7], 'miss_cell_7', do_add_jokers, from_game_over),
+            add_to_joker_party_cell(cards[8], 'miss_cell_8', do_add_jokers, from_game_over),
+            add_to_joker_party_cell(cards[9], 'miss_cell_9', do_add_jokers, from_game_over),
+            add_to_joker_party_cell(cards[10], 'miss_cell_0', do_add_jokers, from_game_over),
         }},
         create_option_cycle({options = options, w = 5, opt_callback = 'adding_jokers_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = 1, colour = G.C.RED, no_pips = true})
     }}
@@ -321,6 +347,16 @@ function unlock_party_joker(key)
     end
 end
 
+G.FUNCS.can_add_joker_ui = function(e)
+    if (#G.PROFILES[G.SETTINGS.profile].mission_jokers >= 5) then
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    else
+        e.config.colour = G.C.GREEN
+        e.config.button = 'add_joker_ui'
+    end
+end
+
 G.FUNCS.add_joker_ui = function(e)
     G.FUNCS.overlay_menu{
         definition = create_UI_adding_jokers(e.config.ref_table and e.config.ref_table[1], (e.config.id == 'no_adding_jokers')),
@@ -333,11 +369,11 @@ G.FUNCS.can_add_joker = function(e)
     end
     local valid = true
     for i = 1, #G.PROFILES[G.SETTINGS.profile].mission_jokers do
-        if e.config.ref_table and (G.PROFILES[G.SETTINGS.profile].mission_jokers[i] == e.config.ref_table.config.center.key) then
+        if e.config.ref_table[1] and (G.PROFILES[G.SETTINGS.profile].mission_jokers[i] == e.config.ref_table[1].config.center.key) then
             valid = false
         end
     end
-    if not e.config.ref_table or not valid or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers[e.config.ref_table.config.center.key] or (#G.PROFILES[G.SETTINGS.profile].mission_jokers >= 5) then
+    if not e.config.ref_table[1] or not valid or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers[e.config.ref_table[1].config.center.key] or (#G.PROFILES[G.SETTINGS.profile].mission_jokers >= 5) then
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
     else
@@ -365,24 +401,52 @@ G.FUNCS.add_joker = function(e)
     if not G.PROFILES[G.SETTINGS.profile].mission_jokers then
         G.PROFILES[G.SETTINGS.profile].mission_jokers = {}
     end
-    table.insert(G.PROFILES[G.SETTINGS.profile].mission_jokers, e.config.ref_table.config.center.key)
+    table.insert(G.PROFILES[G.SETTINGS.profile].mission_jokers, e.config.ref_table[1].config.center.key)
     G.FUNCS.overlay_menu{
-        definition = G.UIDEF.run_setup(),
+        definition = G.UIDEF.run_setup(e.config.ref_table[2]),
     }
     local tab_but = G.OVERLAY_MENU:get_UIE_by_ID("tab_but_" .. localize('b_missions'))
     G.FUNCS.change_tab(tab_but)
+    G:save_progress()
+end
 
+G.FUNCS.can_remove_joker = function(e)
+    if (#G.PROFILES[G.SETTINGS.profile].mission_jokers == 0) then
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    else
+        e.config.colour = G.C.RED
+        e.config.button = 'remove_joker'
+    end
 end
 
 G.FUNCS.remove_joker = function(e)
-    G.PROFILES[G.SETTINGS.profile].mission_jokers = {}
+    local key = mission_area.cards[1].config.center.key
+    for i = 1, #G.PROFILES[G.SETTINGS.profile].mission_jokers do
+        if G.PROFILES[G.SETTINGS.profile].mission_jokers[i] == key then
+            table.remove(G.PROFILES[G.SETTINGS.profile].mission_jokers, i)
+            break
+        end
+    end
     local tab_but = G.OVERLAY_MENU:get_UIE_by_ID("tab_but_" .. localize('b_missions'))
     G.FUNCS.change_tab(tab_but)
+    G:save_progress()
 end
 
 G.FUNCS.mission_stake_page = function(args)
     if not args or not args.cycle_config then return end
-    miss_stake_page = args.cycle_config.current_option
+    G.PROFILES[G.SETTINGS.profile].selected_mission = args.cycle_config.current_option
+    local a = {localize('m_covert_chasm'), localize('m_fading_fog'), localize('m_viral_valley')}
+    local b = {'m_covert_chasm', 'm_fading_fog', 'm_viral_valley'}
+    for i, j in pairs(mission_desc_nodes) do
+        mission_desc_nodes[i] = nil
+    end
+    for i, j in ipairs(localize{type = 'raw_descriptions', key = b[G.PROFILES[G.SETTINGS.profile].selected_mission], set = "Missions"}) do
+        table.insert(mission_desc_nodes, j)
+    end
+    miss_selected_text[1] = a[G.PROFILES[G.SETTINGS.profile].selected_mission]
+    G.OVERLAY_MENU:recalculate()
+    G:save_progress()
 end
 
 G.FUNCS.adding_jokers_page = function(args)
@@ -391,7 +455,7 @@ G.FUNCS.adding_jokers_page = function(args)
         local joker_ui = G.OVERLAY_MENU:get_UIE_by_ID("miss_cell_" .. tostring(i))
         local area = joker_ui.children[1].children[1].children[1].config.object
         if joker_ui.children[2] then
-            joker_ui.children[2].config.ref_table = nil
+            joker_ui.children[2].config.ref_table = {nil , joker_ui.children[2].config.ref_table[2]}
         end
         joker_ui.children[1].config.ref_table = nil
         local j = (i == 0) and 10 or i
@@ -406,7 +470,7 @@ G.FUNCS.adding_jokers_page = function(args)
             end
             area:emplace(card)
             if joker_ui.children[2] then
-                joker_ui.children[2].config.ref_table = card
+                joker_ui.children[2].config.ref_table = {card , joker_ui.children[2].config.ref_table[2]}
             end
             joker_ui.children[1].config.ref_table = card
         end
@@ -420,7 +484,7 @@ G.FUNCS.start_setup_mission = function(e)
         },
         rules = {
             custom = {
-                {id = 'mission', mission_id = miss_stake_page or 1},
+                {id = 'mission', mission_id = G.PROFILES[G.SETTINGS.profile].selected_mission},
             }
         },
     }})
@@ -540,6 +604,99 @@ SMODS.Blind {
     end,
 }
 
+SMODS.Blind {
+    loc_txt = {
+        name = 'Periwinkle Pathogen',
+        text = { 'Create a Negative Eternal', 'Infected Joker' }
+    },
+    key = 'final_pathogen',
+    name = "Periwinkle Pathogen",
+    config = {},
+    boss = {min = 1, max = 10, showdown = true}, 
+    showdown = true,
+    boss_colour = HEX("ccccff"),
+    vars = {},
+    dollars = 8,
+    mult = 2,
+    atlas = "blinds4",
+    pos = {x = 0, y = 0},
+    in_pool = function(self)
+        return (G.GAME.modifiers.mission == 3)
+    end,
+    set_blind = function(self, reset, silent)
+        if not reset then
+            local card = create_card('Joker', G.jokers, nil, nil, nil, nil, 'j_joker', 'peri')
+            card:add_to_deck()
+            G.jokers:emplace(card)
+            card:set_eternal(true)
+            card:set_edition({negative = true})
+            card.ability.miss_infected = true
+            card.ability.periwinkle_pathogen = true
+        end
+    end,
+    disable = function(self, reset, silent)
+        for i = 1, #G.jokers.cards do
+            if G.jokers.cards[i].ability.periwinkle_pathogen then
+                G.jokers.cards[i]:start_dissolve()
+            end
+        end
+    end,
+    defeat = function(self, reset, silent)
+        for i = 1, #G.jokers.cards do
+            if G.jokers.cards[i].ability.periwinkle_pathogen then
+                G.jokers.cards[i].ability.periwinkle_pathogen = nil
+            end
+        end
+    end,
+}
+
+SMODS.Blind {
+    loc_txt = {
+        name = 'Corrupt Pathogen',
+        text = { 'All Jokers become', 'Infected' }
+    },
+    key = 'corrupt_pathogen',
+    name = "Corrupt Pathogen",
+    config = {},
+    boss = {min = 1, max = 10, showdown = true}, 
+    showdown = true,
+    boss_colour = HEX("5e5eff"),
+    vars = {},
+    dollars = 8,
+    mult = 3,
+    atlas = "blinds5",
+    pos = {x = 0, y = 0},
+    in_pool = function(self)
+        return (G.GAME.modifiers.mission == 3)
+    end,
+    set_blind = function(self, reset, silent)
+        if not reset then
+            for i = 1, #G.jokers.cards do
+                if not G.jokers.cards[i].ability.miss_infected then
+                    G.jokers.cards[i].ability.corrupt_pathogen = true
+                    G.jokers.cards[i]:juice_up()
+                    G.jokers.cards[i].ability.miss_infected = true
+                end
+            end
+        end
+    end,
+    disable = function(self, reset, silent)
+        for i = 1, #G.jokers.cards do
+            if G.jokers.cards[i].ability.corrupt_pathogen then
+                G.jokers.cards[i].ability.corrupt_pathogen = nil
+                G.jokers.cards[i].ability.miss_infected = nil
+            end
+        end
+    end,
+    defeat = function(self, reset, silent)
+        for i = 1, #G.jokers.cards do
+            if G.jokers.cards[i].ability.corrupt_pathogen then
+                G.jokers.cards[i].ability.corrupt_pathogen = nil
+            end
+        end
+    end,
+}
+
 SMODS.Sticker {
     key = 'obscured',
     rate = 0,
@@ -594,6 +751,31 @@ SMODS.Sticker {
     end,
 }
 
+SMODS.Sticker {
+    key = 'infected',
+    rate = 0,
+    pos = { x = 1, y = 0 },
+    atlas = "stickers",
+    colour = HEX '67c759',
+    badge_colour = HEX '67c759',
+    should_apply = function(self, card, center, area)
+        return false
+    end,
+    loc_txt = {
+        name = "Infected",
+        text = {
+            "May act change {C:attention}rank{} or {C:attention}suit{},",
+            "{C:attention}unplay{}, or {C:red}fail{} to trigger",
+            "if {C:attention}Joker{}. {C:green}Infected{} may",
+            "{C:green}spread{} to nearby cards"
+        },
+        label = "Infected"
+    },
+    loc_vars = function(self, info_queue, card)
+        return {vars = {}}
+    end,
+}
+
 SMODS.Shader {
     key = 'grayscale',
     path = 'grayscale.fs'
@@ -604,7 +786,21 @@ SMODS.Back {
     name = "Mission Deck",
     pos = { x = 0, y = 0 },
     atlas = 'decks',
-    omit = true
+    omit = true,
+    apply = function(self)
+	    G.E_MANAGER:add_event(Event({func = function()
+            if G.GAME.modifiers.mission == 3 then
+                local pool = {}
+                for i = 1, #G.playing_cards do
+                    table.insert(pool, G.playing_cards[i])
+                end
+                pseudoshuffle(pool, pseudoseed('mission'))
+                for i = 1, 3 do
+                    pool[i].ability.miss_infected = true
+                end
+            end
+    	return true end }))
+    end
 }
 
 local old_boss = get_new_boss
@@ -621,6 +817,12 @@ function get_new_boss()
     elseif (G.GAME.modifiers.mission == 2) and (G.GAME.round_resets.ante > 0) and (G.GAME.round_resets.ante % 8 == 0) then
         G.GAME.bosses_used['bl_miss_existential_eraser'] = G.GAME.bosses_used['bl_miss_existential_eraser'] + 1
         return 'bl_miss_existential_eraser'
+    elseif (G.GAME.modifiers.mission == 3) and (G.GAME.round_resets.ante % 8 == 4) then
+        G.GAME.bosses_used['bl_miss_final_pathogen'] = G.GAME.bosses_used['bl_miss_final_pathogen'] + 1
+        return 'bl_miss_final_pathogen'
+    elseif (G.GAME.modifiers.mission == 3) and (G.GAME.round_resets.ante % 8 == 0) then
+        G.GAME.bosses_used['bl_miss_corrupt_pathogen'] = G.GAME.bosses_used['bl_miss_corrupt_pathogen'] + 1
+        return 'bl_miss_corrupt_pathogen'
     end
     return old_boss()
 end
