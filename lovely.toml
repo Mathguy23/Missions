@@ -294,12 +294,20 @@ if G.GAME and G.GAME.modifiers and (G.GAME.modifiers.mission == 3) then
                 else
                     infect_table[i + 1] = true
                 end
+            elseif pseudorandom('rand_infection') < (0.015 * (G.GAME.round_resets.ante - 4)) then
+                infect_table[i + 1] = true
             end
         end
         for i = 1, #k.cards do
-            if infect_table[i] then
-                k.cards[i]:juice_up()
-                k.cards[i].ability.miss_infected = true
+            if infect_table[i] and not k.cards[i].ability.miss_infected then
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'immediate',
+                    func = function()
+                        k.cards[i].ability.miss_infected = true
+                        return true
+                    end
+                }))
+                card_eval_status_text(k.cards[i], 'extra', nil, nil, nil, {message = localize('k_achoo'), colour = G.C.GREEN})
             end
         end
     end
@@ -316,7 +324,7 @@ payload = '''if not game_over and (G.GAME.chips >= G.GAME.blind.chips) and G.GAM
         unlock_party_joker('j_pareidolia')
     end
 end
-if game_over and (G.GAME.chips >= 0.99 * G.GAME.blind.chips) and (G.GAME.chips < G.GAME.blind.chips) and G.GAME.blind and ((G.GAME.blind.name == 'Scorched Acorn') or (G.GAME.blind.name == 'Existential Eraser')) then
+if game_over and (G.GAME.chips >= 0.99 * G.GAME.blind.chips) and (G.GAME.chips < G.GAME.blind.chips) and G.GAME.blind and ((G.GAME.blind.name == 'Scorched Acorn') or (G.GAME.blind.name == 'Existential Eraser') or (G.GAME.blind.name == 'Corrupt Pathogen')) then
     unlock_party_joker('j_mr_bones')
 end'''
 match_indent = true
@@ -361,7 +369,7 @@ payload = '''   if G.GAME.modifiers.mission then
     if G.GAME.miss_unlock_trackers.nofacedjokers then
         unlock_party_joker('j_faceless')
     end
-    if G.GAME.round_scores.cards_discarded.amt >= 750 then
+    if G.GAME.round_scores.cards_discarded.amt >= 650 then
         unlock_party_joker('j_ramen')
     end
     if G.GAME.hands['Pair'].played >= 80 then
@@ -641,7 +649,7 @@ payload = '''local left_play = 0
 for i = 1, #G.play.cards do
     if G.play.cards[i].ability.miss_infected then
         local card = G.play.cards[i]
-        if pseudorandom('infected') < 0.3 then
+        if pseudorandom('infected') < 0.5 then
             local change = pseudorandom('infected_change')
             G.E_MANAGER:add_event(Event({
                 trigger = 'immediate',
@@ -681,7 +689,7 @@ for i = 1, #G.play.cards do
                     return true
                 end
             }))
-        elseif (pseudorandom('infected') < 1/7) and (left_play < #G.play.cards - 1) then
+        elseif (pseudorandom('infected') < 0.4) and (left_play < #G.play.cards - 1) then
             draw_card(G.play, G.hand, i*100/#G.play.cards, 'up', nil, card)
             left_play = left_play + 1
         end

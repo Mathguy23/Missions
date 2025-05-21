@@ -187,7 +187,7 @@ return {
             j_ramen = {
                 text = {
                     "{C:green}Accomplish{} a {C:attention}Mission{}",
-                    "with {C:attention}750{} or more",
+                    "with {C:attention}650{} or more",
                     "cards {C:red}discarded{}"
                 }
             },
@@ -228,7 +228,7 @@ return {
             j_gros_michel = {
                 text = {
                     "Consume {C:attention}Ramen{}, {C:attention}Ice Cream{},",
-                    "and {C:attention}Setlzer{} in a single",
+                    "and {C:attention}Seltzer{} in a single",
                     "blind"
                 }
             },
@@ -274,6 +274,7 @@ return {
             m_viral_valley = {
                 text = {
                     "Start with 3 Infected playing cards",
+                    "Jokers and Playing Cards may become Infected randomly",
                     "Ante 4 blind is Periwinkle Pathogen",
                     "Ante 8 blind is ???????"
                 }
@@ -293,6 +294,7 @@ return {
             k_beta = "Beta",
             k_gamma = "Gamma",
             b_miss_locked_jokers = "Party Jokers",
+            k_achoo = "Achoo!"
         },
         v_text = {
             

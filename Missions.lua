@@ -4,7 +4,7 @@
 --- PREFIX: miss
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Balatro: Missions Gamemode
---- VERSION: 1.2.0
+--- VERSION: 1.2.1
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -653,7 +653,7 @@ SMODS.Blind {
 SMODS.Blind {
     loc_txt = {
         name = 'Corrupt Pathogen',
-        text = { 'All Jokers become', 'Infected' }
+        text = { 'All Jokers are', 'Infected this round' }
     },
     key = 'corrupt_pathogen',
     name = "Corrupt Pathogen",
@@ -692,6 +692,8 @@ SMODS.Blind {
         for i = 1, #G.jokers.cards do
             if G.jokers.cards[i].ability.corrupt_pathogen then
                 G.jokers.cards[i].ability.corrupt_pathogen = nil
+                G.jokers.cards[i]:juice_up()
+                G.jokers.cards[i].ability.miss_infected = nil
             end
         end
     end,
@@ -764,7 +766,7 @@ SMODS.Sticker {
     loc_txt = {
         name = "Infected",
         text = {
-            "May act change {C:attention}rank{} or {C:attention}suit{},",
+            "May change {C:attention}rank{} or {C:attention}suit{},",
             "{C:attention}unplay{}, or {C:red}fail{} to trigger",
             "if {C:attention}Joker{}. {C:green}Infected{} may",
             "{C:green}spread{} to nearby cards"
