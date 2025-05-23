@@ -177,6 +177,11 @@ pattern = '''local badges = {}'''
 position = 'after'
 payload = '''if self.ability and self.ability.grayscaled then
     no_badge = nil
+    if main_start and (self.ability.name == 'Misprint') then
+        main_start[2].config.object:remove()
+        main_start[3].config.object:remove()
+    end
+    main_start = nil
 end'''
 match_indent = true
 
@@ -204,6 +209,8 @@ payload = '''miss_unlock_trackers = {
     nopairhands = true,
     matadorcheck = true,
     nononcommonjokers = true,
+    joker_purchased = false,
+    jokerssold = false,
 },
 miss_funds = {
     curr_dollars = 0,
@@ -384,6 +391,15 @@ payload = '''   if G.GAME.modifiers.mission then
     if G.GAME.miss_unlock_trackers.nononcommonjokers then
         unlock_party_joker('j_riff_raff')
     end
+    if G.jokers and (#G.jokers.cards >= 10) then
+        unlock_party_joker('j_abstract')
+    end
+    if not G.GAME.miss_unlock_trackers.joker_purchased then
+        unlock_party_joker('j_hallucination')
+    end
+    if not G.GAME.miss_unlock_trackers.jokerssold then
+        unlock_party_joker('j_reserved_parking')
+    end
 end'''
 match_indent = true
 
@@ -557,15 +573,18 @@ target = 'card.lua'
 pattern = '''ease_dollars(self.sell_cost)'''
 position = 'after'
 payload = '''local cost = self.sell_cost
-G.E_MANAGER:add_event(Event({
+if (self.ability.set == "Joker") then
+    G.GAME.miss_unlock_trackers.jokerssold = true
+    G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
-            if cost >= 75 then
+            if (cost >= 75) then
                 unlock_party_joker('j_egg')
             end
             return true
         end
-    }))'''
+    }))
+end'''
 match_indent = true
 
 [[patches]]
@@ -754,4 +773,42 @@ payload = '''   if G.GAME and G.GAME.modifiers and G.GAME.modifiers.mission then
             unlock_party_joker('j_gros_michel')
         end
     end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''elseif G.GAME.won then'''
+position = 'before'
+payload = '''elseif mission_colors and G.GAME.won then 
+    ease_background_colour{new_colour = mission_colors[2], contrast = 1}
+elseif mission_colors and (blindname == 'Small Blind' or blindname == 'Big Blind' or blindname == '') then
+    ease_background_colour{new_colour = mission_colors[1], contrast = 1}'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''--For the blind related colours'''
+position = 'before'
+payload = '''local mission_colors = nil
+if G.GAME and G.GAME.modifiers and G.GAME.modifiers.mission then
+    if G.GAME.modifiers.mission == 1 then
+        mission_colors = {HEX("847150"), HEX("ca6125")}
+    elseif G.GAME.modifiers.mission == 2 then
+        mission_colors = {HEX("5b8450"), HEX("31501a")}
+    elseif G.GAME.modifiers.mission == 3 then
+        mission_colors = {HEX("545084"), HEX("4343bc")}
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = '''c1.area:remove_card(c1)'''
+position = "before"
+payload = '''if G.shop and c1.ability and (c1.ability.set == "Joker") then
+    G.GAME.miss_unlock_trackers.joker_purchased = true
+end'''
 match_indent = true

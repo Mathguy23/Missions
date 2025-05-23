@@ -4,7 +4,7 @@
 --- PREFIX: miss
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Balatro: Missions Gamemode
---- VERSION: 1.2.1
+--- VERSION: 1.2.1b
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -25,8 +25,9 @@ SMODS.Atlas({ key = "stickers", atlas_table = "ASSET_ATLAS", path = "stickers.pn
 local adding_jokers = {
     'j_joker', 'j_wrathful_joker', 'j_lusty_joker', 'j_gluttenous_joker', 'j_greedy_joker', 'j_credit_card', 'j_diet_cola', 'j_delayed_grat', 'j_space', 'j_business',
     'j_8_ball', 'j_pareidolia', 'j_egg', 'j_mr_bones', 'j_chaos', 'j_superposition', 'j_reserved_parking', 'j_faceless', 'j_todo_list', 'j_seance',
-    'j_sly', 'j_wily', 'j_clever', 'j_devious', 'j_crafty', 'j_jolly', 'j_zany', 'j_mad', 'j_crazy', 'j_droll', 
-    'j_matador', 'j_gros_michel', 'j_splash', 'j_drunkard', 'j_hallucination', 'j_abstract', 'j_hanging_chad', 'j_riff_raff', 'j_ramen', 'j_popcorn'
+    'j_sly', 'j_wily', 'j_clever', 'j_devious', 'j_crafty', 'j_jolly', 'j_zany', 'j_mad', 'j_crazy', 'j_droll',
+    'j_matador', 'j_gros_michel', 'j_splash', 'j_drunkard', 'j_hallucination', 'j_abstract', 'j_hanging_chad', 'j_riff_raff', 'j_ramen', 'j_popcorn',
+    'j_banner', 'j_square', 'j_misprint', 'j_ice_cream', 'j_castle', 'j_fortune_teller', 'j_juggler', 'j_golden', 'j_green_joker', 'j_blue_joker'
 }
 
 miss_joker_tiers = {
@@ -34,6 +35,8 @@ miss_joker_tiers = {
     j_todo_list = 2,
     j_matador = 2,
     j_riff_raff = 2,
+    j_hallucination = 2,
+    j_reserved_parking = 2,
 }
 
 jokers_with_face = {

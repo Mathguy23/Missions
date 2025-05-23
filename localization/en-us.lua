@@ -246,6 +246,28 @@ return {
                     "{C:blue}non-common{} {C:attention}jokers{}"
                 }
             },
+            j_abstract = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "while having {C:attention}10{} or",
+                    "more {C:attention}jokers{}"
+                }
+            },
+            j_hallucination = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "without buying {C:attention}Jokers{}",
+                    "from the {C:attention}shop{}",
+                    "{C:inactive}(Buffoon Packs excluded){}",
+                }
+            },
+            j_reserved_parking = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "while never {C:green}selling{}",
+                    "{C:attention}jokers{}"
+                }
+            },
             tbd = {
                 text = {
                     "To be",
