@@ -211,6 +211,12 @@ payload = '''miss_unlock_trackers = {
     nononcommonjokers = true,
     joker_purchased = false,
     jokerssold = false,
+    nonfourcardhand = false,
+    allpairs = true,
+    allthrees = true,
+    allfours = true,
+    allflushes = true,
+    allstraights = true,
 },
 miss_funds = {
     curr_dollars = 0,
@@ -351,15 +357,32 @@ match_indent = true
 target = 'functions/state_events.lua'
 pattern = '''G.FUNCS.discard_cards_from_highlighted = function(e, hook)'''
 position = 'after'
-payload = '''   G.GAME.miss_unlock_trackers.discarded = true'''
+payload = '''   G.GAME.miss_unlock_trackers.discarded = true
+    for i = 1, #G.hand.highlighted do
+        for i2, j2 in pairs(SMODS.Suits) do
+            if G.GAME.modifiers.mission and G.hand.highlighted[i]:is_suit(j2.key) then
+                if not G.GAME.miss_unlock_trackers.per_round['discard_' .. j2.key] then
+                    G.GAME.miss_unlock_trackers.per_round['discard_' .. j2.key] = 1
+                else
+                    G.GAME.miss_unlock_trackers.per_round['discard_' .. j2.key] = G.GAME.miss_unlock_trackers.per_round['discard_' .. j2.key] + 1
+                end
+                local amt = G.GAME.miss_unlock_trackers.per_round['discard_' .. j2.key]
+                if amt >= 26 then
+                    if j2.key == "Diamonds" then
+                        unlock_party_joker('j_castle')
+                    end
+                end
+            end
+        end
+    end'''
 match_indent = true
 
 [[patches]]
 [patches.pattern]
 target = 'functions/state_events.lua'
-pattern = '''function win_game()'''
+pattern = '''local Jimbo = nil'''
 position = 'after'
-payload = '''   if G.GAME.modifiers.mission then
+payload = '''if G.GAME.modifiers.mission then
     unlock_party_joker('j_joker')
     if not G.GAME.miss_unlock_trackers.skippedskip then
         unlock_party_joker('j_diet_cola')
@@ -400,6 +423,34 @@ payload = '''   if G.GAME.modifiers.mission then
     if not G.GAME.miss_unlock_trackers.jokerssold then
         unlock_party_joker('j_reserved_parking')
     end
+    if (G.GAME.consumeable_usage_total and G.GAME.consumeable_usage_total.tarot or 0) >= 100 then
+        unlock_party_joker('j_fortune_teller')
+    end
+    if not G.GAME.miss_unlock_trackers.nonfourcardhand then
+        unlock_party_joker('j_square')
+    end
+    if G.GAME.miss_unlock_trackers.allpairs then
+        unlock_party_joker('j_duo')
+    end
+    if G.GAME.miss_unlock_trackers.allthrees then
+        unlock_party_joker('j_trio')
+    end
+    if G.GAME.miss_unlock_trackers.allfours then
+        unlock_party_joker('j_family')
+    end
+    if G.GAME.miss_unlock_trackers.allflushes then
+        unlock_party_joker('j_tribe')
+    end
+    if G.GAME.miss_unlock_trackers.allstraights then
+        unlock_party_joker('j_order')
+    end
+    local steel_tally = 0
+    for k, v in pairs(G.playing_cards) do
+        if SMODS.has_enhancement(v, 'm_steel') then steel_tally = steel_tally + 1 end
+    end
+    if steel_tally >= 20 then
+        unlock_party_joker('j_steel_joker')
+    end
 end'''
 match_indent = true
 
@@ -410,15 +461,15 @@ pattern = '''G.GAME.dollars = G.GAME.dollars + mod'''
 position = 'after'
 payload = '''   if G.GAME.modifiers.mission then
     if to_big then
-        if to_big(G.GAME.dollars) >= to_big(150) then
+        if to_big(G.GAME.dollars) >= to_big(300) then
             unlock_party_joker('j_business')
-        elseif to_big(G.GAME.dollars) <= to_big(-50) then
+        elseif to_big(G.GAME.dollars) <= to_big(-40) then
             unlock_party_joker('j_credit_card')
         end
     else
-        if G.GAME.dollars >= 150 then
+        if G.GAME.dollars >= 300 then
             unlock_party_joker('j_business')
-        elseif G.GAME.dollars <= -50 then
+        elseif G.GAME.dollars <= -40 then
             unlock_party_joker('j_credit_card')
         end
     end
@@ -562,8 +613,26 @@ position = 'before'
 payload = '''if #scoring_hand ~= 5 then
     G.GAME.miss_unlock_trackers.nonfivecardhand = true
 end
+if (#G.play.cards ~= 4) and not (G.GAME.blind and (G.GAME.blind.name == "The Psychic")) then
+    G.GAME.miss_unlock_trackers.nonfourcardhand = true
+end
 if poker_hands['Pair'] and next(poker_hands['Pair']) then
     G.GAME.miss_unlock_trackers.nopairhands = nil
+end
+if text ~= 'Pair' then
+    G.GAME.miss_unlock_trackers.allpairs = nil
+end
+if text ~= 'Three of a Kind' then
+    G.GAME.miss_unlock_trackers.allthrees = nil
+end
+if text ~= 'Four of a Kind' then
+    G.GAME.miss_unlock_trackers.allfours = nil
+end
+if text ~= 'Flush' then
+    G.GAME.miss_unlock_trackers.allflushes = nil
+end
+if text ~= 'Straight' then
+    G.GAME.miss_unlock_trackers.allstraights = nil
 end'''
 match_indent = true
 
@@ -811,4 +880,35 @@ position = "before"
 payload = '''if G.shop and c1.ability and (c1.ability.set == "Joker") then
     G.GAME.miss_unlock_trackers.joker_purchased = true
 end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/button_callbacks.lua'
+pattern = '''ease_dollars(G.GAME.current_round.dollars)'''
+position = 'before'
+payload = '''if to_big and (to_big(G.GAME.current_round.dollars) >= to_big(100)) then
+    unlock_party_joker('j_golden')
+elseif not to_big and (G.GAME.current_round.dollars >= 100) then
+    unlock_party_joker('j_golden')
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:use_consumeable(area, copier)'''
+position = 'after'
+payload = '''   if self.ability.set == "Spectral" then
+        if not G.GAME.miss_unlock_trackers.used_spectrals then
+           G.GAME.miss_unlock_trackers.used_spectrals = {count = 0}
+        end
+        if not G.GAME.miss_unlock_trackers.used_spectrals[self.config.center.key] then
+            G.GAME.miss_unlock_trackers.used_spectrals[self.config.center.key] = true
+            G.GAME.miss_unlock_trackers.used_spectrals.count = G.GAME.miss_unlock_trackers.used_spectrals.count + 1
+            if G.GAME.miss_unlock_trackers.used_spectrals.count >= 6 then
+                unlock_party_joker('j_cartomancer')
+            end
+        end
+    end'''
 match_indent = true

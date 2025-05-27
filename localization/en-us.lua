@@ -108,7 +108,7 @@ return {
             },
             j_credit_card = {
                 text = {
-                    "Go {C:red}-$50{} or",
+                    "Go {C:red}-$40{} or",
                     "less in {C:attention}debt{}"
                 }
             },
@@ -132,7 +132,7 @@ return {
             },
             j_business = {
                 text = {
-                    "Have {C:money}$150{}",
+                    "Have {C:money}$300{}",
                     "or more"
                 }
             },
@@ -268,6 +268,109 @@ return {
                     "{C:attention}jokers{}"
                 }
             },
+            -- j_banner = {
+            --     text = {
+            --         "{C:red}Discard{} a {C:attention}Flush House{},",
+            --         "{C:attention}Five of a Kind{}, and {C:attention}Royal",
+            --         "Flush{} in one blind"
+            --     }
+            -- },
+            -- j_juggler = {
+            --     text = {
+            --         "{C:green}Accomplish{} a {C:attention}Mission{}",
+            --         "with {C:blue}played cards{} and",
+            --         "{C:red}cards discarded{} within {C:attention}3{}",
+            --         "cards of each other"
+            --     }
+            -- },
+            -- j_ice_cream = {
+            --     text = {
+            --         "Have {C:blue}5,000{} chips",
+            --     }
+            -- },
+            j_castle = {
+                text = {
+                    "{C:red}Discard{} {C:attention}26{} {C:diamonds}Diamonds{}",
+                    "in a single {C:attention}blind{}"
+                }
+            },
+            j_fortune_teller = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "with {C:attention}100{} Tarot",
+                    "cards used",
+                }
+            },
+            j_golden = {
+                text = {
+                    "Earn {C:money}$100{} in a",
+                    "{C:attention}cash out{}",
+                }
+            },
+            j_square = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "playing only hands with",
+                    "exactly {C:attention}4{} cards",
+                    "{C:inactive}(The Psychic excluded){}"
+                }
+            },
+            -- j_green_joker = {
+            --     text = {
+            --         "{C:green}Accomplish{} a {C:attention}Mission{}",
+            --         "with less than {C:attention}100{} cards",
+            --         "{C:blue}played{} and {C:red}discarded{}",
+            --     }
+            -- },
+            j_duo = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "playing only",
+                    "{C:attention}Pairs{}",
+                }
+            },
+            j_trio = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "playing only",
+                    "{C:attention}Three of a Kinds{}",
+                }
+            },
+            j_family = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "playing only",
+                    "{C:attention}Four of a Kinds{}",
+                }
+            },
+            j_tribe = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "playing only",
+                    "{C:attention}Flushes{}",
+                }
+            },
+            j_order = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "playing only",
+                    "{C:attention}Straights{}",
+                }
+            },
+            j_steel_joker = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "with {C:attention}20{} or more",
+                    "{C:attention}Steel Cards{}",
+                }
+            },
+            j_cartomancer = {
+                text = {
+                    "Use {C:attention}6{} unique {C:spectral}Spectral{}",
+                    "cards without {C:attention}winning{}",
+                }
+            },
+            --------------
             tbd = {
                 text = {
                     "To be",

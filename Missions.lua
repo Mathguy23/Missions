@@ -4,7 +4,7 @@
 --- PREFIX: miss
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Balatro: Missions Gamemode
---- VERSION: 1.2.1b
+--- VERSION: 1.2.2
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -27,7 +27,8 @@ local adding_jokers = {
     'j_8_ball', 'j_pareidolia', 'j_egg', 'j_mr_bones', 'j_chaos', 'j_superposition', 'j_reserved_parking', 'j_faceless', 'j_todo_list', 'j_seance',
     'j_sly', 'j_wily', 'j_clever', 'j_devious', 'j_crafty', 'j_jolly', 'j_zany', 'j_mad', 'j_crazy', 'j_droll',
     'j_matador', 'j_gros_michel', 'j_splash', 'j_drunkard', 'j_hallucination', 'j_abstract', 'j_hanging_chad', 'j_riff_raff', 'j_ramen', 'j_popcorn',
-    'j_banner', 'j_square', 'j_misprint', 'j_ice_cream', 'j_castle', 'j_fortune_teller', 'j_juggler', 'j_golden', 'j_green_joker', 'j_blue_joker'
+    'j_banner', 'j_square', 'j_misprint', 'j_ice_cream', 'j_castle', 'j_fortune_teller', 'j_juggler', 'j_golden', 'j_green_joker', 'j_blue_joker',
+    'j_duo', 'j_trio', 'j_family', 'j_tribe', 'j_order', 'j_steel_joker', 'j_cartomancer'
 }
 
 miss_joker_tiers = {
@@ -37,6 +38,13 @@ miss_joker_tiers = {
     j_riff_raff = 2,
     j_hallucination = 2,
     j_reserved_parking = 2,
+    j_duo = 2,
+    j_trio = 2,
+    j_family = 2,
+    j_tribe = 2,
+    j_order = 2,
+    j_steel_joker = 2,
+    j_cartomancer = 2,
 }
 
 jokers_with_face = {
