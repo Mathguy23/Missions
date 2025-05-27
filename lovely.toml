@@ -906,7 +906,7 @@ payload = '''   if self.ability.set == "Spectral" then
         if not G.GAME.miss_unlock_trackers.used_spectrals[self.config.center.key] then
             G.GAME.miss_unlock_trackers.used_spectrals[self.config.center.key] = true
             G.GAME.miss_unlock_trackers.used_spectrals.count = G.GAME.miss_unlock_trackers.used_spectrals.count + 1
-            if G.GAME.miss_unlock_trackers.used_spectrals.count >= 6 then
+            if (G.GAME.miss_unlock_trackers.used_spectrals.count >= 6) and not G.GAME.won then
                 unlock_party_joker('j_cartomancer')
             end
         end
