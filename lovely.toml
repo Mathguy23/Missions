@@ -88,7 +88,7 @@ if self and self.ability and (self.ability.set == 'Tarot') and (self.area == G.c
         if not G.GAME.miss_unlock_trackers.per_round.used_tarots[self.config.center.key] then
             G.GAME.miss_unlock_trackers.per_round.used_tarots[self.config.center.key] = true
             G.GAME.miss_unlock_trackers.per_round.used_tarots.count = G.GAME.miss_unlock_trackers.per_round.used_tarots.count + 1
-            if G.GAME.miss_unlock_trackers.per_round.used_tarots.count >= 22 then
+            if G.GAME.miss_unlock_trackers.per_round.used_tarots.count >= 8 then
                 unlock_party_joker('j_superposition')
             end
         end
@@ -217,6 +217,16 @@ payload = '''miss_unlock_trackers = {
     allfours = true,
     allflushes = true,
     allstraights = true,
+},
+joker_tooltips = {
+    j_hanging_chad = {
+        active = false,
+        button_text = localize('b_extra_tooltips')
+    },
+    j_faceless = {
+        active = false,
+        button_text = localize('b_extra_tooltips')
+    },
 },
 miss_funds = {
     curr_dollars = 0,
@@ -393,13 +403,13 @@ payload = '''if G.GAME.modifiers.mission then
     if not G.GAME.miss_unlock_trackers.nonfivecardhand then
         unlock_party_joker('j_splash')
     end
-    if G.GAME.round_scores.times_rerolled.amt >= 75 then
+    if G.GAME.round_scores.times_rerolled.amt >= 50 then
         unlock_party_joker('j_chaos')
     end
     if G.GAME.miss_unlock_trackers.nofacedjokers then
         unlock_party_joker('j_faceless')
     end
-    if G.GAME.round_scores.cards_discarded.amt >= 650 then
+    if G.GAME.round_scores.cards_discarded.amt >= 500 then
         unlock_party_joker('j_ramen')
     end
     if G.GAME.hands['Pair'].played >= 80 then
@@ -414,7 +424,7 @@ payload = '''if G.GAME.modifiers.mission then
     if G.GAME.miss_unlock_trackers.nononcommonjokers then
         unlock_party_joker('j_riff_raff')
     end
-    if G.jokers and (#G.jokers.cards >= 10) then
+    if G.jokers and (#G.jokers.cards >= 8) then
         unlock_party_joker('j_abstract')
     end
     if not G.GAME.miss_unlock_trackers.joker_purchased then
@@ -423,7 +433,7 @@ payload = '''if G.GAME.modifiers.mission then
     if not G.GAME.miss_unlock_trackers.jokerssold then
         unlock_party_joker('j_reserved_parking')
     end
-    if (G.GAME.consumeable_usage_total and G.GAME.consumeable_usage_total.tarot or 0) >= 100 then
+    if (G.GAME.consumeable_usage_total and G.GAME.consumeable_usage_total.tarot or 0) >= 85 then
         unlock_party_joker('j_fortune_teller')
     end
     if not G.GAME.miss_unlock_trackers.nonfourcardhand then
@@ -450,6 +460,16 @@ payload = '''if G.GAME.modifiers.mission then
     end
     if steel_tally >= 20 then
         unlock_party_joker('j_steel_joker')
+    end
+    local cavendished = false
+    for i = 1, #G.jokers.cards do
+        if G.jokers.cards[i] and G.jokers.cards[i].config and G.jokers.cards[i].config.center and (G.jokers.cards[i].config.center.key == 'j_cavendish') then
+            cavendished = true
+            break
+        end
+    end
+    if cavendished then
+        unlock_party_joker('j_gros_michel')
     end
 end'''
 match_indent = true
@@ -541,7 +561,7 @@ if G.GAME.miss_round_update or G.GAME.miss_hand_update then
 end
 G.GAME.miss_round_update = nil
 G.GAME.miss_hand_update = nil
-if (G.GAME and G.GAME.modifiers and (G.GAME.modifiers.mission == 2)) and (G.GAME.miss_funds.curr_dollars ~= G.GAME.dollars) then
+if false and (G.GAME and G.GAME.modifiers and (G.GAME.modifiers.mission == 2)) and (G.GAME.miss_funds.curr_dollars ~= G.GAME.dollars) then
     local change = G.GAME.dollars - G.GAME.miss_funds.curr_dollars
     G.GAME.miss_funds.curr_dollars = G.GAME.dollars
     if to_big then
@@ -586,6 +606,14 @@ payload = '''if G.GAME and G.GAME.blind and (G.GAME.blind.name == "Existential E
     if card and card.ability and card.ability.death_timer then info_queue[#info_queue+1] = {key = 'death_timer_hands', set = 'Other', vars = {card.ability.death_timer}} end
 else
     if card and card.ability and card.ability.death_timer then info_queue[#info_queue+1] = {key = 'death_timer', set = 'Other', vars = {card.ability.death_timer}} end
+end
+if G.GAME and G.GAME.joker_tooltips and card and card.playing_card and G.GAME.joker_tooltips['j_hanging_chad'].active then info_queue[#info_queue+1] = {key = 'times_triggered', set = 'Other', vars = {card.ability.times_triggered or 0}} end
+if G.GAME and G.GAME.joker_tooltips and card and card.ability and (card.ability.set == "Joker") and G.GAME.joker_tooltips['j_faceless'].active then 
+    if jokers_with_face[_c.key] then
+        info_queue[#info_queue+1] = {key = 'has_face', set = 'Other'}
+    else
+        info_queue[#info_queue+1] = {key = 'has_no_face', set = 'Other'}
+    end
 end'''
 match_indent = true
 
@@ -625,7 +653,7 @@ end
 if text ~= 'Three of a Kind' then
     G.GAME.miss_unlock_trackers.allthrees = nil
 end
-if text ~= 'Four of a Kind' then
+if (text ~= 'Four of a Kind') and (G.GAME.round_resets.ante > 2) then
     G.GAME.miss_unlock_trackers.allfours = nil
 end
 if text ~= 'Flush' then
@@ -647,7 +675,7 @@ if (self.ability.set == "Joker") then
     G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
-            if (cost >= 75) then
+            if (cost >= 60) then
                 unlock_party_joker('j_egg')
             end
             return true
@@ -807,45 +835,6 @@ match_indent = true
 
 [[patches]]
 [patches.pattern]
-target = 'card.lua'
-pattern = '''if self.ability.x_mult - self.ability.extra <= 1 then'''
-position = 'after'
-payload = '''   if G.GAME and G.GAME.modifiers and G.GAME.modifiers.mission then
-        G.GAME.miss_unlock_trackers.per_round.ramen_eaten = true
-        if G.GAME.miss_unlock_trackers.per_round.ramen_eaten and G.GAME.miss_unlock_trackers.per_round.ice_cream_eaten and G.GAME.miss_unlock_trackers.per_round.seltzer_drank then
-            unlock_party_joker('j_gros_michel')
-        end
-    end'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'card.lua'
-pattern = '''if self.ability.extra.chips - self.ability.extra.chip_mod <= 0 then'''
-position = 'after'
-payload = '''   if G.GAME and G.GAME.modifiers and G.GAME.modifiers.mission then
-        G.GAME.miss_unlock_trackers.per_round.ice_cream_eaten = true
-        if G.GAME.miss_unlock_trackers.per_round.ramen_eaten and G.GAME.miss_unlock_trackers.per_round.ice_cream_eaten and G.GAME.miss_unlock_trackers.per_round.seltzer_drank then
-            unlock_party_joker('j_gros_michel')
-        end
-    end'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'card.lua'
-pattern = '''if self.ability.extra - 1 <= 0 then'''
-position = 'after'
-payload = '''   if G.GAME and G.GAME.modifiers and G.GAME.modifiers.mission then
-        G.GAME.miss_unlock_trackers.per_round.seltzer_drank = true
-        if G.GAME.miss_unlock_trackers.per_round.ramen_eaten and G.GAME.miss_unlock_trackers.per_round.ice_cream_eaten and G.GAME.miss_unlock_trackers.per_round.seltzer_drank then
-            unlock_party_joker('j_gros_michel')
-        end
-    end'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
 target = 'functions/common_events.lua'
 pattern = '''elseif G.GAME.won then'''
 position = 'before'
@@ -887,9 +876,11 @@ match_indent = true
 target = 'functions/button_callbacks.lua'
 pattern = '''ease_dollars(G.GAME.current_round.dollars)'''
 position = 'before'
-payload = '''if to_big and (to_big(G.GAME.current_round.dollars) >= to_big(100)) then
+payload = '''local total_dollars = G.GAME.current_round.dollars - (G.GAME.investment_dollars or 0)
+G.GAME.investment_dollars = nil
+if to_big and (to_big(total_dollars) >= to_big(50)) then
     unlock_party_joker('j_golden')
-elseif not to_big and (G.GAME.current_round.dollars >= 100) then
+elseif not to_big and (total_dollars >= 50) then
     unlock_party_joker('j_golden')
 end'''
 match_indent = true
@@ -911,4 +902,12 @@ payload = '''   if self.ability.set == "Spectral" then
             end
         end
     end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'tag.lua'
+pattern = '''G.GAME.last_blind and G.GAME.last_blind.boss then'''
+position = 'after'
+payload = '''G.GAME.investment_dollars = (G.GAME.investment_dollars or 0) + self.config.dollars'''
 match_indent = true

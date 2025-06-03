@@ -24,6 +24,28 @@ return {
                     "{C:attention}#1#{} hands"
                 }
             },
+            times_triggered = {
+                name = "Hanging Chad",
+                text = {
+                    "This {C:attention}card{} has",
+                    "been triggered",
+                    "{C:attention}#1#{} time(s)"
+                }
+            },
+            has_face = {
+                name = "Faceless Joker",
+                text = {
+                    "This {C:attention}Joker{} has",
+                    "a {C:attention}face{}",
+                }
+            },
+            has_no_face = {
+                name = "Faceless Joker",
+                text = {
+                    "This {C:attention}Joker{} has",
+                    "a {C:red}no{} {C:attention}face{}",
+                }
+            },
             alpha_1 = {
                 name = "",
                 text = {
@@ -153,19 +175,19 @@ return {
             j_egg = {
                 text = {
                     "Sell a {C:attention}Joker{} for",
-                    "{C:money}$75{} or more",
+                    "{C:money}$60{} or more",
                 }
             },
             j_chaos = {
                 text = {
                     "{C:green}Accomplish{} a {C:attention}Mission{}",
-                    "with {C:attention}75{} times",
+                    "with {C:attention}50{} times",
                     "{C:green}rerolled{}"
                 }
             },
             j_8_ball = {
                 text = {
-                    "{C:attention}Score{} a {C:dark_edition}Polychrome{}",
+                    "{C:attention}Score{} a {C:dark_edition}Editioned{}",
                     "{C:tarot}Purple Sealed{} {C:attention}Wild{}",
                     "{C:attention}8{} of {C:spades}Spades{}"
                 }
@@ -187,7 +209,7 @@ return {
             j_ramen = {
                 text = {
                     "{C:green}Accomplish{} a {C:attention}Mission{}",
-                    "with {C:attention}650{} or more",
+                    "with {C:attention}500{} or more",
                     "cards {C:red}discarded{}"
                 }
             },
@@ -214,7 +236,7 @@ return {
             },
             j_superposition = {
                 text = {
-                    "Create {C:attention}22{} unique {C:tarot}Tarot{}",
+                    "Create {C:attention}8{} unique {C:tarot}Tarot{}",
                     "cards in a single",
                     "{C:attention}blind{}"
                 }
@@ -227,9 +249,8 @@ return {
             },
             j_gros_michel = {
                 text = {
-                    "Consume {C:attention}Ramen{}, {C:attention}Ice Cream{},",
-                    "and {C:attention}Seltzer{} in a single",
-                    "blind"
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "with a {C:attention}Cavendish{}"
                 }
             },
             j_matador = {
@@ -249,7 +270,7 @@ return {
             j_abstract = {
                 text = {
                     "{C:green}Accomplish{} a {C:attention}Mission{}",
-                    "while having {C:attention}10{} or",
+                    "while having {C:attention}8{} or",
                     "more {C:attention}jokers{}"
                 }
             },
@@ -297,14 +318,15 @@ return {
             j_fortune_teller = {
                 text = {
                     "{C:green}Accomplish{} a {C:attention}Mission{}",
-                    "with {C:attention}100{} Tarot",
+                    "with {C:attention}85{} Tarot",
                     "cards used",
                 }
             },
             j_golden = {
                 text = {
-                    "Earn {C:money}$100{} in a",
+                    "Earn {C:money}$50{} in a",
                     "{C:attention}cash out{}",
+                    "{C:inactive}(Investment Tag excluded)"
                 }
             },
             j_square = {
@@ -341,6 +363,7 @@ return {
                     "{C:green}Accomplish{} a {C:attention}Mission{}",
                     "playing only",
                     "{C:attention}Four of a Kinds{}",
+                    "past ante {C:attention}2{}"
                 }
             },
             j_tribe = {
@@ -384,16 +407,15 @@ return {
                     "By Ante 3, cards may be drawn face down",
                     "By Ante 4, cards in shop may be face down",
                     "Ante 4 blind is Amber Acorn",
-                    "Ante 8 blind is ???????"
+                    "Ante 8 blind is Scorched Acorn"
                 }
             },
             m_fading_fog = {
                 text = {
                     "Jokers and Consumables delete after 3 rounds",
-                    "Each dollar can only last for 3 rounds",
-                    "Older dollars are spent before newer ones",
+                    "Joker Party Jokers are immune to the above rule",
                     "Ante 4 blind is Ebony Eraser",
-                    "Ante 8 blind is ???????"
+                    "Ante 8 blind is Existential Eraser"
                 }
             },
             m_viral_valley = {
@@ -401,7 +423,7 @@ return {
                     "Start with 3 Infected playing cards",
                     "Jokers and Playing Cards may become Infected randomly",
                     "Ante 4 blind is Periwinkle Pathogen",
-                    "Ante 8 blind is ???????"
+                    "Ante 8 blind is Corrupt Pathogen",
                 }
             },
         }
@@ -410,6 +432,7 @@ return {
         dictionary = {
             b_missions = "Missions",
             b_add_joker = "Add Joker",
+            b_select_voucher = "Select Voucher",
             b_remove_joker = "Remove Leftmost",
             k_available_ex = "Available!",
             m_covert_chasm = "The Covert Chasm",
@@ -419,7 +442,10 @@ return {
             k_beta = "Beta",
             k_gamma = "Gamma",
             b_miss_locked_jokers = "Party Jokers",
-            k_achoo = "Achoo!"
+            k_achoo = "Achoo!",
+            b_extra_tooltips = "Add Tooltips",
+            b_minus_tooltips = "Remove Tooltips",
+            b_no_tooltips = "No Tooltips"
         },
         v_text = {
             

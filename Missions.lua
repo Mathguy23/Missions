@@ -4,7 +4,7 @@
 --- PREFIX: miss
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Balatro: Missions Gamemode
---- VERSION: 1.2.2
+--- VERSION: 1.3.0
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -135,12 +135,17 @@ jokers_with_face = {
     j_perkeo = true,
 }
 
+local availiable_vouchers = {
+    'v_grabber', 'v_wasteful', 'v_tarot_merchant', 'v_blank', 'v_planet_merchant', 'v_crystal_ball', 'v_directors_cut'
+}
+
 local mission_area = nil
 local mission_desc_nodes = {}
 
 function G.UIDEF.missions(from_game_over)
 
     G.PROFILES[G.SETTINGS.profile].selected_mission = G.PROFILES[G.SETTINGS.profile].selected_mission or 1
+    G.PROFILES[G.SETTINGS.profile].selected_mission_voucher = G.PROFILES[G.SETTINGS.profile].selected_mission_voucher or 'v_blank'
     local a = {localize('m_covert_chasm'), localize('m_fading_fog'), localize('m_viral_valley')}
     local b = {'m_covert_chasm', 'm_fading_fog', 'm_viral_valley'}
     miss_selected_text = {a[G.PROFILES[G.SETTINGS.profile].selected_mission]}
@@ -151,6 +156,12 @@ function G.UIDEF.missions(from_game_over)
         1*G.CARD_H, 
     {card_limit = 5, type = 'title_2', highlight_limit = 1})
 
+    local area2 = CardArea(
+        G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h,
+        (1.25)*G.CARD_W,
+        1*G.CARD_H, 
+    {card_limit = 1, type = 'title_2', highlight_limit = 1})
+
     if not G.PROFILES[G.SETTINGS.profile].mission_jokers then
         G.PROFILES[G.SETTINGS.profile].mission_jokers = {}
     end
@@ -159,6 +170,9 @@ function G.UIDEF.missions(from_game_over)
         local card = Card(0,0, 0.7*G.CARD_W, 0.7*G.CARD_H, nil, G.P_CENTERS[G.PROFILES[G.SETTINGS.profile].mission_jokers[i]])
         area:emplace(card)
     end
+
+    local card_ = Card(0,0, 0.7*G.CARD_W, 0.7*G.CARD_H, nil, G.P_CENTERS[G.PROFILES[G.SETTINGS.profile].selected_mission_voucher])
+    area2:emplace(card_)
 
     mission_area = area
 
@@ -178,18 +192,31 @@ function G.UIDEF.missions(from_game_over)
                     {n=G.UIT.O, config={object = DynaText({string = 'Joker Party', colours = {G.C.UI.TEXT_LIGHT}, bump = true, scale = 0.6})}}
                 }},
                 {n=G.UIT.R, config={align = "cm",  colour = G.C.CLEAR, padding = 0.1}, nodes={
-                    {n=G.UIT.C, config={align = "cm", padding = 0, minh = 0.8, minw = 0.4 + (5.25)*G.CARD_W}, nodes = {{n=G.UIT.O, config={object = area}}}},
-                }},
-                {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
-                    UIBox_button({col = true,label = {localize('b_add_joker')}, button = 'add_joker_ui', func = 'can_add_joker_ui',minw = 3, scale = 0.4, minh = 0.6, ref_table = {from_game_over}}),
-                    UIBox_button({col = true,label = {localize('b_remove_joker')}, button = 'remove_joker', func = 'can_remove_joker', minw = 3, scale = 0.4, minh = 0.6}),
+                    {n=G.UIT.C, config={align = "cm", padding = 0, minh = 0.8, minw = 0.2 + (5.25)*G.CARD_W}, nodes = {
+                        {n=G.UIT.R, config={align = "cm", colour = G.C.BLACK, r = 0.1}, nodes = {
+                            {n=G.UIT.O, config={object = area}},
+                        }},
+                        {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes = {
+                            UIBox_button({col = true,label = {localize('b_add_joker')}, button = 'add_joker_ui', func = 'can_add_joker_ui',minw = 3, scale = 0.4, minh = 0.6, ref_table = {from_game_over}}),
+                            UIBox_button({col = true,label = {localize('b_remove_joker')}, button = 'remove_joker', func = 'can_remove_joker', minw = 3, scale = 0.4, minh = 0.6}),
+                        }}
+                    }},
+                    {n=G.UIT.C, config={align = "cm", padding = 0, minh = 0.8, minw = 0.2 + (1.25)*G.CARD_W}, nodes = {
+                        {n=G.UIT.R, config={align = "cm", colour = G.C.BLACK, r = 0.1}, nodes = {
+                            {n=G.UIT.O, config={object = area2}},
+                        }},
+                        {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes = {
+                            UIBox_button({label = {localize('b_select_voucher')}, button = 'select_voucher_ui',minw = 2, scale = 0.4, minh = 0.6, ref_table = {from_game_over}}),
+                        }}
+                    }},
                 }},
                 {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
                     UIBox_button({label = {localize('b_play_cap')}, button = 'start_setup_mission', minw = 3, scale = 0.6, minh = 0.8, colour = G.C.BLUE}),
                 }},
                 create_option_cycle({options = a, scale = 0.6, w = 4, opt_callback = 'mission_stake_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = G.PROFILES[G.SETTINGS.profile].selected_mission, colour = G.C.RED, on_demand_tooltip = {text = mission_desc_nodes}})
-        }}}
-    }
+            }},
+            
+        }}
     return t
 end
 
@@ -207,15 +234,75 @@ function add_to_joker_party_cell(key, id, do_add_jokers, from_game_over)
         end
         area:emplace(card)
     end
+    local t = nil
+    if not do_add_jokers then
+        t = {n=G.UIT.C, config={id = id, align = "cm", colour = G.C.CLEAR, padding = 0.1, r = 0.08}, nodes = {
+            {n=G.UIT.R, config={ref_table = card, r = 0.08, padding = 0.05, align = "bm", minw = 0.5 + G.CARD_W, minh = 0.8, colour = G.C.BLACK, func = 'can_add_joker_back'}, nodes={
+                {n=G.UIT.C, config={align = "cm", padding = 0.05, minh = 0.8, minw = 0.4 + G.CARD_W}, nodes = {{n=G.UIT.O, config={object = area}}}},
+            }},
+            {n=G.UIT.R, config={ref_table = {card, from_game_over}, r = 0.08, padding = 0.05, align = "bm", minw = 0.85, minh = 0.45, hover = true, shadow = true, colour = G.C.RED, one_press = true, button = 'add_joker', func = 'can_add_joker'}, nodes={
+                {n=G.UIT.T, config={text = localize('b_add_joker'),colour = G.C.UI.TEXT_LIGHT, scale = 0.4, shadow = true}}
+            }},
+        }}
+    else
+        t = {n=G.UIT.C, config={id = id, align = "cm", colour = G.C.CLEAR, padding = 0.1, r = 0.08}, nodes = {
+            {n=G.UIT.R, config={ref_table = card, r = 0.08, padding = 0.05, align = "bm", minw = 0.5 + G.CARD_W, minh = 0.8, colour = G.C.BLACK, func = 'can_add_joker_back'}, nodes={
+                {n=G.UIT.C, config={align = "cm", padding = 0.05, minh = 0.8, minw = 0.4 + G.CARD_W}, nodes = {{n=G.UIT.O, config={object = area}}}},
+            }},
+            {n=G.UIT.R, config={ref_table = {key}, r = 0.08, padding = 0.05, align = "bm", minw = 0.85, minh = 0.45, hover = true, shadow = true, colour = G.C.RED, button = 'add_joker_tooltip', func = 'can_add_joker_tooltip'}, nodes={
+                {n=G.UIT.T, config={colour = G.C.UI.TEXT_LIGHT, scale = 0.35, shadow = true, ref_table = key and G.GAME.joker_tooltips[key] or {button_text = localize('b_no_tooltips')}, ref_value = 'button_text'}}
+            }},
+        }}
+    end
+    return t
+end
+
+function add_to_voucher_cell(key, id, from_game_over)
+    local area = CardArea(
+        G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h,
+        G.CARD_W,
+        G.CARD_H, 
+    {card_limit = 1, type = 'title_2'})
+    local card = nil
+    if key then
+        card = Card(0,0, 0.7*G.CARD_W, 0.7*G.CARD_H, nil, G.P_CENTERS[key])
+        area:emplace(card)
+    end
     local t = {n=G.UIT.C, config={id = id, align = "cm", colour = G.C.CLEAR, padding = 0.1, r = 0.08}, nodes = {
         {n=G.UIT.R, config={ref_table = card, r = 0.08, padding = 0.05, align = "bm", minw = 0.5 + G.CARD_W, minh = 0.8, colour = G.C.BLACK, func = 'can_add_joker_back'}, nodes={
             {n=G.UIT.C, config={align = "cm", padding = 0.05, minh = 0.8, minw = 0.4 + G.CARD_W}, nodes = {{n=G.UIT.O, config={object = area}}}},
         }},
-        not do_add_jokers and {n=G.UIT.R, config={ref_table = {card, from_game_over}, r = 0.08, padding = 0.05, align = "bm", minw = 0.85, minh = 0.45, hover = true, shadow = true, colour = G.C.RED, one_press = true, button = 'add_joker', func = 'can_add_joker'}, nodes={
-            {n=G.UIT.T, config={text = localize('b_add_joker'),colour = G.C.UI.TEXT_LIGHT, scale = 0.4, shadow = true}}
+        {n=G.UIT.R, config={ref_table = {card, from_game_over}, r = 0.08, padding = 0.05, align = "bm", minw = 0.85, minh = 0.45, hover = true, shadow = true, colour = G.C.RED, one_press = true, button = 'select_voucher', func = 'can_select_voucher'}, nodes={
+            {n=G.UIT.T, config={text = localize('b_select_voucher'),colour = G.C.UI.TEXT_LIGHT, scale = 0.4, shadow = true}}
         }} or nil,
     }}
     return t
+end
+
+function create_UI_adding_vouchers(from_game_over)
+    local cards = {}
+    for i = 1, 10 do
+        table.insert(cards, adding_jokers[i])
+    end
+    local pages = math.ceil(#adding_jokers / 10)
+    local options = {}
+    for i = 1, pages do
+        table.insert(options, localize('k_page') .. " " .. tostring(i) .. "/" .. tostring(pages))
+    end
+    local t = {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes = {
+        {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
+            add_to_voucher_cell(availiable_vouchers[1], 'miss_cell_1', from_game_over),
+            add_to_voucher_cell(availiable_vouchers[2], 'miss_cell_2', from_game_over),
+            add_to_voucher_cell(availiable_vouchers[3], 'miss_cell_3', from_game_over),
+            add_to_voucher_cell(availiable_vouchers[4], 'miss_cell_4', from_game_over),
+        }},
+        {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
+            add_to_voucher_cell(availiable_vouchers[5], 'miss_cell_6', from_game_over),
+            add_to_voucher_cell(availiable_vouchers[6], 'miss_cell_7', from_game_over),
+            add_to_voucher_cell(availiable_vouchers[7], 'miss_cell_8', from_game_over),
+        }},
+    }}
+    return create_UIBox_generic_options({back_func = (from_game_over and 'setup_run_game_over' or 'setup_run') or nil, contents = {t}})
 end
 
 function create_UI_adding_jokers(from_game_over, do_add_jokers)
@@ -374,6 +461,12 @@ G.FUNCS.add_joker_ui = function(e)
     }
 end
 
+G.FUNCS.select_voucher_ui = function(e)
+    G.FUNCS.overlay_menu{
+        definition = create_UI_adding_vouchers(e.config.ref_table and e.config.ref_table[1]),
+    }
+end
+
 G.FUNCS.can_add_joker = function(e)
     if not G.PROFILES[G.SETTINGS.profile].mission_jokers then
         G.PROFILES[G.SETTINGS.profile].mission_jokers = {}
@@ -390,6 +483,17 @@ G.FUNCS.can_add_joker = function(e)
     else
         e.config.colour = G.C.RED
         e.config.button = 'add_joker'
+    end
+end
+
+G.FUNCS.can_select_voucher = function(e)
+    G.PROFILES[G.SETTINGS.profile].selected_mission_voucher = G.PROFILES[G.SETTINGS.profile].selected_mission_voucher or 'v_blank'
+    if not e.config.ref_table[1] or (e.config.ref_table[1].config.center.key == G.PROFILES[G.SETTINGS.profile].selected_mission_voucher) then
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    else
+        e.config.colour = G.C.RED
+        e.config.button = 'select_voucher'
     end
 end
 
@@ -413,6 +517,16 @@ G.FUNCS.add_joker = function(e)
         G.PROFILES[G.SETTINGS.profile].mission_jokers = {}
     end
     table.insert(G.PROFILES[G.SETTINGS.profile].mission_jokers, e.config.ref_table[1].config.center.key)
+    G.FUNCS.overlay_menu{
+        definition = G.UIDEF.run_setup(e.config.ref_table[2]),
+    }
+    local tab_but = G.OVERLAY_MENU:get_UIE_by_ID("tab_but_" .. localize('b_missions'))
+    G.FUNCS.change_tab(tab_but)
+    G:save_progress()
+end
+
+G.FUNCS.select_voucher = function(e)
+    G.PROFILES[G.SETTINGS.profile].selected_mission_voucher = e.config.ref_table[1].config.center.key
     G.FUNCS.overlay_menu{
         definition = G.UIDEF.run_setup(e.config.ref_table[2]),
     }
@@ -463,14 +577,19 @@ end
 G.FUNCS.adding_jokers_page = function(args)
     if not args or not args.cycle_config then return end
     for i = 0, 9 do
-        local joker_ui = G.OVERLAY_MENU:get_UIE_by_ID("miss_cell_" .. tostring(i))
-        local area = joker_ui.children[1].children[1].children[1].config.object
-        if joker_ui.children[2] then
-            joker_ui.children[2].config.ref_table = {nil , joker_ui.children[2].config.ref_table[2]}
-        end
-        joker_ui.children[1].config.ref_table = nil
         local j = (i == 0) and 10 or i
         local key = adding_jokers[(args.cycle_config.current_option - 1) * 10 + j]
+        local joker_ui = G.OVERLAY_MENU:get_UIE_by_ID("miss_cell_" .. tostring(i))
+        local area = joker_ui.children[1].children[1].children[1].config.object
+        if joker_ui.children[2].config.ref_table[2] ~= nil then
+            joker_ui.children[2].config.ref_table = {nil , joker_ui.children[2].config.ref_table[2]}
+        else
+            joker_ui.children[2].config.ref_table = {key}
+        end
+        if joker_ui.children[2].children[1].config.ref_table then
+            joker_ui.children[2].children[1].config.ref_table = key and G.GAME.joker_tooltips[key] or {button_text = localize('b_no_tooltips')}
+        end
+        joker_ui.children[1].config.ref_table = nil
         if area.cards[1] then
             area.cards[1]:remove()
         end
@@ -480,8 +599,13 @@ G.FUNCS.adding_jokers_page = function(args)
                 card.ability.grayscaled = true
             end
             area:emplace(card)
-            if joker_ui.children[2] then
+            if joker_ui.children[2].config.ref_table[2] ~= nil then
                 joker_ui.children[2].config.ref_table = {card , joker_ui.children[2].config.ref_table[2]}
+            else
+                joker_ui.children[2].config.ref_table = {key}
+            end
+            if joker_ui.children[2].children[1].config.ref_table then
+                joker_ui.children[2].children[1].config.ref_table = G.GAME.joker_tooltips[key] or {button_text = localize('b_no_tooltips')}
             end
             joker_ui.children[1].config.ref_table = card
         end
@@ -507,6 +631,32 @@ G.FUNCS.setup_run_game_over = function(e)
       definition = G.UIDEF.run_setup(true),
     }
     G.OVERLAY_MENU.config.no_esc = true
+end
+
+G.FUNCS.add_joker_tooltip = function(e)
+    local key = e.config.ref_table[1]
+    if not G.GAME.joker_tooltips[key].active then
+        G.GAME.joker_tooltips[key].active = true
+        G.GAME.joker_tooltips[key].button_text = localize('b_minus_tooltips')
+    else
+        G.GAME.joker_tooltips[key].active = false
+        G.GAME.joker_tooltips[key].button_text = localize('b_extra_tooltips')
+    end
+end
+
+G.FUNCS.can_add_joker_tooltip = function(e)
+    local key = e.config.ref_table[1]
+    if (key ~= 'j_hanging_chad') and (key ~= 'j_faceless') then
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    else
+        if G.GAME.joker_tooltips[key].active then
+            e.config.colour = G.C.RED
+        else
+            e.config.colour = G.C.GREEN
+        end
+        e.config.button = 'add_joker_tooltip'
+    end
 end
 
 SMODS.Blind {
@@ -802,6 +952,7 @@ SMODS.Back {
     omit = true,
     apply = function(self)
 	    G.E_MANAGER:add_event(Event({func = function()
+            G.PROFILES[G.SETTINGS.profile].selected_mission_voucher = G.PROFILES[G.SETTINGS.profile].selected_mission_voucher or 'v_blank'
             if G.GAME.modifiers.mission == 3 then
                 local pool = {}
                 for i = 1, #G.playing_cards do
@@ -811,6 +962,17 @@ SMODS.Back {
                 for i = 1, 3 do
                     pool[i].ability.miss_infected = true
                 end
+            end
+            if G.GAME.modifiers.mission then
+                local key = G.PROFILES[G.SETTINGS.profile].selected_mission_voucher
+                G.GAME.used_vouchers[key] = true
+                G.GAME.starting_voucher_count = (G.GAME.starting_voucher_count or 0) + 1
+                G.E_MANAGER:add_event(Event({
+                    func = function()
+                        Card.apply_to_run(nil, G.P_CENTERS[key])
+                        return true
+                    end
+                }))
             end
     	return true end }))
     end
@@ -851,7 +1013,7 @@ end
 local old_score = SMODS.score_card
 function SMODS.score_card(card, context)
     old_score(card, context)
-    if (card:get_id() == 8) and (card.seal == 'Purple') and card.edition and (card.edition.polychrome) and (card.ability.name == "Wild Card") and (card.base.suit == "Spades") then
+    if (card:get_id() == 8) and (card.seal == 'Purple') and card.edition and next(card.edition) and (card.ability.name == "Wild Card") and (card.base.suit == "Spades") then
         G.E_MANAGER:add_event(Event({
             trigger = 'immediate',
             func = function()
