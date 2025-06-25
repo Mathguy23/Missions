@@ -4,7 +4,7 @@
 --- PREFIX: miss
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Balatro: Missions Gamemode
---- VERSION: 1.3.0
+--- VERSION: 1.4.0
 ----------------------------------------------
 ------------MOD CODE -------------------------
 
@@ -28,7 +28,8 @@ local adding_jokers = {
     'j_sly', 'j_wily', 'j_clever', 'j_devious', 'j_crafty', 'j_jolly', 'j_zany', 'j_mad', 'j_crazy', 'j_droll',
     'j_matador', 'j_gros_michel', 'j_splash', 'j_drunkard', 'j_hallucination', 'j_abstract', 'j_hanging_chad', 'j_riff_raff', 'j_ramen', 'j_popcorn',
     'j_banner', 'j_square', 'j_misprint', 'j_ice_cream', 'j_castle', 'j_fortune_teller', 'j_juggler', 'j_golden', 'j_green_joker', 'j_blue_joker',
-    'j_duo', 'j_trio', 'j_family', 'j_tribe', 'j_order', 'j_steel_joker', 'j_cartomancer'
+    'j_duo', 'j_trio', 'j_family', 'j_tribe', 'j_order', 'j_steel_joker', 'j_cartomancer', 'j_flower_pot', 'j_four_fingers', 'j_troubadour',
+    'j_smeared', 'j_hiker', 'j_rocket', 'j_certificate', 'j_marble', 'j_oops', 'j_burnt', 'j_madness', 'j_stuntman', 'j_stone'
 }
 
 miss_joker_tiers = {
@@ -45,6 +46,15 @@ miss_joker_tiers = {
     j_order = 2,
     j_steel_joker = 2,
     j_cartomancer = 2,
+    j_smeared = 2,
+    j_hiker = 2,
+    j_rocket = 2,
+    j_certificate = 2,
+    j_marble = 2,
+    j_oops = 2,
+    j_burnt = 2,
+    j_stuntman = 2,
+    j_stone = 2,
 }
 
 jokers_with_face = {
@@ -135,8 +145,49 @@ jokers_with_face = {
     j_perkeo = true,
 }
 
+jokers_with_economy = {
+    j_credit_card = true,
+    j_delayed_grat = true,
+    j_business = true,
+    j_egg = true,
+    j_burglar = true,
+    j_8_ball = true,
+    j_sixth_sense = true,
+    j_faceless = true,
+    j_superposition = true,
+    j_todo_list = true,
+    j_seance = true,
+    j_riff_raff = true,
+    j_vagabond = true,
+    j_cloud_9 = true,
+    j_rocket = true,
+    j_midas_mask = true,
+    j_gift = true,
+    j_reserved_parking = true,
+    j_mail = true,
+    j_to_the_moon = true,
+    j_chaos = true,
+    j_golden = true,
+    j_trading = true,
+    j_ticket = true,
+    j_rough_gem = true,
+    j_matador = true,
+    j_invisible = true,
+    j_cartomancer = true,
+    j_satellite = true,
+    j_perkeo = true,
+}
+
+tooltip_miss_jokers = {
+    j_hanging_chad = true,
+    j_faceless = true,
+    j_flower_pot = true,
+    j_misprint = true,
+    j_rocket = true,
+}
+
 local availiable_vouchers = {
-    'v_grabber', 'v_wasteful', 'v_tarot_merchant', 'v_blank', 'v_planet_merchant', 'v_crystal_ball', 'v_directors_cut'
+    'v_grabber', 'v_wasteful', 'v_tarot_merchant', 'v_blank', 'v_planet_merchant', 'v_crystal_ball', 'v_directors_cut', 'v_paint_brush'
 }
 
 local mission_area = nil
@@ -179,7 +230,10 @@ function G.UIDEF.missions(from_game_over)
     for i, j in pairs(mission_desc_nodes) do
         mission_desc_nodes[i] = nil
     end
-    for i, j in ipairs(localize{type = 'raw_descriptions', key = b[G.PROFILES[G.SETTINGS.profile].selected_mission], set = "Missions"}) do
+
+    local ante_loc_vars = G.PROFILES[G.SETTINGS.profile].chrono_selected and {3, 6} or {4, 8}
+
+    for i, j in ipairs(localize{type = 'raw_descriptions', key = b[G.PROFILES[G.SETTINGS.profile].selected_mission], set = "Missions", vars = ante_loc_vars}) do
         table.insert(mission_desc_nodes, j)
     end
 
@@ -211,9 +265,17 @@ function G.UIDEF.missions(from_game_over)
                     }},
                 }},
                 {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
-                    UIBox_button({label = {localize('b_play_cap')}, button = 'start_setup_mission', minw = 3, scale = 0.6, minh = 0.8, colour = G.C.BLUE}),
+                    UIBox_button({col = true, label = {localize('b_play_cap')}, button = 'start_setup_mission', minw = 3, scale = 0.6, minh = 0.8, colour = G.C.BLUE}),
                 }},
-                create_option_cycle({options = a, scale = 0.6, w = 4, opt_callback = 'mission_stake_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = G.PROFILES[G.SETTINGS.profile].selected_mission, colour = G.C.RED, on_demand_tooltip = {text = mission_desc_nodes}})
+                {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR}, nodes={
+                    {n=G.UIT.C, config={align = "cm", colour = G.C.CLEAR, padding = 0.03}, nodes={
+                        create_option_cycle({col = nil, options = a, scale = 0.6, w = 4, opt_callback = 'mission_stake_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = G.PROFILES[G.SETTINGS.profile].selected_mission, colour = G.C.RED, on_demand_tooltip = {text = mission_desc_nodes}}),
+                    }},
+                    {n=G.UIT.C, config={align = "cm", colour = G.C.CLEAR, padding = 0.03}, nodes={
+                        create_toggle({col = nil, label = localize('b_six_ante'), ref_table = G.PROFILES[G.SETTINGS.profile], ref_value = 'chrono_selected', callback = G.FUNCS.refresh_missions}),
+                    }},
+                }},
+                
             }},
             
         }}
@@ -269,7 +331,7 @@ function add_to_voucher_cell(key, id, from_game_over)
         area:emplace(card)
     end
     local t = {n=G.UIT.C, config={id = id, align = "cm", colour = G.C.CLEAR, padding = 0.1, r = 0.08}, nodes = {
-        {n=G.UIT.R, config={ref_table = card, r = 0.08, padding = 0.05, align = "bm", minw = 0.5 + G.CARD_W, minh = 0.8, colour = G.C.BLACK, func = 'can_add_joker_back'}, nodes={
+        {n=G.UIT.R, config={ref_table = card, r = 0.08, padding = 0.05, align = "bm", minw = 0.5 + G.CARD_W, minh = 0.8, colour = G.C.BLACK}, nodes={
             {n=G.UIT.C, config={align = "cm", padding = 0.05, minh = 0.8, minw = 0.4 + G.CARD_W}, nodes = {{n=G.UIT.O, config={object = area}}}},
         }},
         {n=G.UIT.R, config={ref_table = {card, from_game_over}, r = 0.08, padding = 0.05, align = "bm", minw = 0.85, minh = 0.45, hover = true, shadow = true, colour = G.C.RED, one_press = true, button = 'select_voucher', func = 'can_select_voucher'}, nodes={
@@ -297,9 +359,10 @@ function create_UI_adding_vouchers(from_game_over)
             add_to_voucher_cell(availiable_vouchers[4], 'miss_cell_4', from_game_over),
         }},
         {n=G.UIT.R, config={align = "cm", colour = G.C.CLEAR, padding = 0.1}, nodes={
-            add_to_voucher_cell(availiable_vouchers[5], 'miss_cell_6', from_game_over),
-            add_to_voucher_cell(availiable_vouchers[6], 'miss_cell_7', from_game_over),
-            add_to_voucher_cell(availiable_vouchers[7], 'miss_cell_8', from_game_over),
+            add_to_voucher_cell(availiable_vouchers[5], 'miss_cell_5', from_game_over),
+            add_to_voucher_cell(availiable_vouchers[6], 'miss_cell_6', from_game_over),
+            add_to_voucher_cell(availiable_vouchers[7], 'miss_cell_7', from_game_over),
+            add_to_voucher_cell(availiable_vouchers[8], 'miss_cell_8', from_game_over),
         }},
     }}
     return create_UIBox_generic_options({back_func = (from_game_over and 'setup_run_game_over' or 'setup_run') or nil, contents = {t}})
@@ -332,7 +395,7 @@ function create_UI_adding_jokers(from_game_over, do_add_jokers)
         }},
         create_option_cycle({options = options, w = 5, opt_callback = 'adding_jokers_page', focus_args = {snap_to = true, nav = 'wide'}, current_option = 1, colour = G.C.RED, no_pips = true})
     }}
-    return create_UIBox_generic_options({back_func = not do_add_jokers and (from_game_over and 'setup_run_game_over' or 'setup_run') or nil, contents = {t}})
+    return create_UIBox_generic_options({back_func = not do_add_jokers and (from_game_over and 'setup_run_game_over_mission' or 'setup_run_mission') or nil, contents = {t}})
 end
 
 function create_UIBox_notify_alert_party_joker(key)
@@ -459,12 +522,14 @@ G.FUNCS.add_joker_ui = function(e)
     G.FUNCS.overlay_menu{
         definition = create_UI_adding_jokers(e.config.ref_table and e.config.ref_table[1], (e.config.id == 'no_adding_jokers')),
     }
+    if e.config.ref_table and e.config.ref_table[1] then G.OVERLAY_MENU.config.no_esc =true end
 end
 
 G.FUNCS.select_voucher_ui = function(e)
     G.FUNCS.overlay_menu{
         definition = create_UI_adding_vouchers(e.config.ref_table and e.config.ref_table[1]),
     }
+    if e.config.ref_table and e.config.ref_table[1] then G.OVERLAY_MENU.config.no_esc =true end
 end
 
 G.FUNCS.can_add_joker = function(e)
@@ -473,11 +538,11 @@ G.FUNCS.can_add_joker = function(e)
     end
     local valid = true
     for i = 1, #G.PROFILES[G.SETTINGS.profile].mission_jokers do
-        if e.config.ref_table[1] and (G.PROFILES[G.SETTINGS.profile].mission_jokers[i] == e.config.ref_table[1].config.center.key) then
+        if e.config and e.config.ref_table[1] and e.config.ref_table[1].config and (G.PROFILES[G.SETTINGS.profile].mission_jokers[i] == e.config.ref_table[1].config.center.key) then
             valid = false
         end
     end
-    if not e.config.ref_table[1] or not valid or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers[e.config.ref_table[1].config.center.key] or (#G.PROFILES[G.SETTINGS.profile].mission_jokers >= 5) then
+    if not e.config or not e.config.ref_table[1] or not valid or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers or not G.PROFILES[G.SETTINGS.profile].ready_mission_jokers[e.config.ref_table[1].config.center.key] or (#G.PROFILES[G.SETTINGS.profile].mission_jokers >= 5) then
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
     else
@@ -558,6 +623,12 @@ G.FUNCS.remove_joker = function(e)
     G:save_progress()
 end
 
+G.FUNCS.refresh_missions = function(e)
+    local tab_but = G.OVERLAY_MENU:get_UIE_by_ID("tab_but_" .. localize('b_missions'))
+    G.FUNCS.change_tab(tab_but)
+    G:save_progress()
+end
+
 G.FUNCS.mission_stake_page = function(args)
     if not args or not args.cycle_config then return end
     G.PROFILES[G.SETTINGS.profile].selected_mission = args.cycle_config.current_option
@@ -566,7 +637,8 @@ G.FUNCS.mission_stake_page = function(args)
     for i, j in pairs(mission_desc_nodes) do
         mission_desc_nodes[i] = nil
     end
-    for i, j in ipairs(localize{type = 'raw_descriptions', key = b[G.PROFILES[G.SETTINGS.profile].selected_mission], set = "Missions"}) do
+    local ante_loc_vars = G.PROFILES[G.SETTINGS.profile].chrono_selected and {3, 6} or {4, 8}
+    for i, j in ipairs(localize{type = 'raw_descriptions', key = b[G.PROFILES[G.SETTINGS.profile].selected_mission], set = "Missions", vars = ante_loc_vars}) do
         table.insert(mission_desc_nodes, j)
     end
     miss_selected_text[1] = a[G.PROFILES[G.SETTINGS.profile].selected_mission]
@@ -613,6 +685,7 @@ G.FUNCS.adding_jokers_page = function(args)
 end
 
 G.FUNCS.start_setup_mission = function(e)  
+    G.PROFILES[G.SETTINGS.profile].last_mission = G.PROFILES[G.SETTINGS.profile].selected_mission
     G.FUNCS.start_run(e, {stake = G.P_STAKES['stake_white'].order, challenge = {
         deck = {
             type = 'Mission Deck',
@@ -620,6 +693,7 @@ G.FUNCS.start_setup_mission = function(e)
         rules = {
             custom = {
                 {id = 'mission', mission_id = G.PROFILES[G.SETTINGS.profile].selected_mission},
+                G.PROFILES[G.SETTINGS.profile].chrono_selected and {id = 'miss_chrono', win_ante = 6} or nil,
             }
         },
     }})
@@ -630,6 +704,26 @@ G.FUNCS.setup_run_game_over = function(e)
     G.FUNCS.overlay_menu{
       definition = G.UIDEF.run_setup(true),
     }
+    G.OVERLAY_MENU.config.no_esc = true
+end
+
+G.FUNCS.setup_run_game_over_mission = function(e)
+    G.SETTINGS.paused = true
+    G.FUNCS.overlay_menu{
+      definition = G.UIDEF.run_setup(true),
+    }
+    local tab_but = G.OVERLAY_MENU:get_UIE_by_ID("tab_but_" .. localize('b_missions'))
+    G.FUNCS.change_tab(tab_but)
+    G.OVERLAY_MENU.config.no_esc = true
+end
+
+G.FUNCS.setup_run_mission = function(e)
+    G.SETTINGS.paused = true
+    G.FUNCS.overlay_menu{
+      definition = G.UIDEF.run_setup(),
+    }
+    local tab_but = G.OVERLAY_MENU:get_UIE_by_ID("tab_but_" .. localize('b_missions'))
+    G.FUNCS.change_tab(tab_but)
     G.OVERLAY_MENU.config.no_esc = true
 end
 
@@ -646,7 +740,7 @@ end
 
 G.FUNCS.can_add_joker_tooltip = function(e)
     local key = e.config.ref_table[1]
-    if (key ~= 'j_hanging_chad') and (key ~= 'j_faceless') then
+    if not tooltip_miss_jokers[key] then
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
     else
@@ -662,7 +756,7 @@ end
 SMODS.Blind {
     loc_txt = {
         name = 'Scorched Acorn',
-        text = { 'Sorting is disabled,', 'Face Down Champion' }
+        text = { 'Sorting is disabled,', '+50% more cards', 'drawn face down' }
     },
     key = 'scorched_acorn',
     name = "Scorched Acorn",
@@ -871,8 +965,14 @@ SMODS.Sticker {
             return
         end
         local odds = 0
-        if (G.GAME.round_resets.ante >= 4) then
-            odds = 0.1 + 0.085 * (G.GAME.round_resets.ante - 3)
+        if G.GAME.modifiers.miss_chrono == 6 then
+            if (G.GAME.round_resets.ante >= 4) then
+                odds = 0.1 + 0.142 * (G.GAME.round_resets.ante - 3)
+            end
+        else
+            if (G.GAME.round_resets.ante >= 4) then
+                odds = 0.1 + 0.085 * (G.GAME.round_resets.ante - 3)
+            end
         end
         if (pseudorandom('badges') > odds) then
             return
@@ -951,6 +1051,9 @@ SMODS.Back {
     atlas = 'decks',
     omit = true,
     apply = function(self)
+        if not G.GAME.modifiers.mission then
+            G.GAME.modifiers.mission = G.PROFILES[G.SETTINGS.profile].last_mission or 1
+        end
 	    G.E_MANAGER:add_event(Event({func = function()
             G.PROFILES[G.SETTINGS.profile].selected_mission_voucher = G.PROFILES[G.SETTINGS.profile].selected_mission_voucher or 'v_blank'
             if G.GAME.modifiers.mission == 3 then
@@ -973,6 +1076,13 @@ SMODS.Back {
                         return true
                     end
                 }))
+                for i, j in ipairs(G.PROFILES[G.SETTINGS.profile].mission_jokers) do
+                    local card = add_joker(j, nil)
+                    if G.GAME.modifiers.mission == 2 then
+                        card.ability.miss_defended = true
+                    end
+                    card.ability.miss_from_joker_party = true
+                end
             end
     	return true end }))
     end
@@ -980,22 +1090,24 @@ SMODS.Back {
 
 local old_boss = get_new_boss
 function get_new_boss()
-    if (G.GAME.modifiers.mission == 1) and (G.GAME.round_resets.ante % 8 == 4) then
+    local final_ante = G.GAME.modifiers.miss_chrono or G.GAME.win_ante
+    local half_ante = math.floor(final_ante / 2) 
+    if (G.GAME.modifiers.mission == 1) and (G.GAME.round_resets.ante % final_ante == half_ante) then
         G.GAME.bosses_used['bl_final_acorn'] = G.GAME.bosses_used['bl_final_acorn'] + 1
         return 'bl_final_acorn'
-    elseif (G.GAME.modifiers.mission == 1) and (G.GAME.round_resets.ante > 0) and (G.GAME.round_resets.ante % 8 == 0) then
+    elseif (G.GAME.modifiers.mission == 1) and (G.GAME.round_resets.ante > 0) and (G.GAME.round_resets.ante % final_ante == 0) then
         G.GAME.bosses_used['bl_miss_scorched_acorn'] = G.GAME.bosses_used['bl_miss_scorched_acorn'] + 1
         return 'bl_miss_scorched_acorn'
-    elseif (G.GAME.modifiers.mission == 2) and (G.GAME.round_resets.ante % 8 == 4) then
+    elseif (G.GAME.modifiers.mission == 2) and (G.GAME.round_resets.ante % final_ante == half_ante) then
         G.GAME.bosses_used['bl_miss_final_eraser'] = G.GAME.bosses_used['bl_miss_final_eraser'] + 1
         return 'bl_miss_final_eraser'
-    elseif (G.GAME.modifiers.mission == 2) and (G.GAME.round_resets.ante > 0) and (G.GAME.round_resets.ante % 8 == 0) then
+    elseif (G.GAME.modifiers.mission == 2) and (G.GAME.round_resets.ante > 0) and (G.GAME.round_resets.ante % final_ante == 0) then
         G.GAME.bosses_used['bl_miss_existential_eraser'] = G.GAME.bosses_used['bl_miss_existential_eraser'] + 1
         return 'bl_miss_existential_eraser'
-    elseif (G.GAME.modifiers.mission == 3) and (G.GAME.round_resets.ante % 8 == 4) then
+    elseif (G.GAME.modifiers.mission == 3) and (G.GAME.round_resets.ante % final_ante == half_ante) then
         G.GAME.bosses_used['bl_miss_final_pathogen'] = G.GAME.bosses_used['bl_miss_final_pathogen'] + 1
         return 'bl_miss_final_pathogen'
-    elseif (G.GAME.modifiers.mission == 3) and (G.GAME.round_resets.ante % 8 == 0) then
+    elseif (G.GAME.modifiers.mission == 3) and (G.GAME.round_resets.ante > 0) and (G.GAME.round_resets.ante % final_ante == 0) then
         G.GAME.bosses_used['bl_miss_corrupt_pathogen'] = G.GAME.bosses_used['bl_miss_corrupt_pathogen'] + 1
         return 'bl_miss_corrupt_pathogen'
     end
@@ -1022,6 +1134,40 @@ function SMODS.score_card(card, context)
             end
         }))
     end
+end
+
+local old_blind_amount = get_blind_amount
+function get_blind_amount(ante)
+    if G.GAME.modifiers and G.GAME.modifiers.miss_chrono then
+        local effective_ante = 1 + ((ante - 1) * 7 / (G.GAME.modifiers.miss_chrono - 1))
+        if effective_ante - math.floor(effective_ante) < 0.0001 then
+            return old_blind_amount(math.floor(effective_ante))
+        else
+            local lower = old_blind_amount(math.floor(effective_ante))
+            local upper = old_blind_amount(math.floor(effective_ante) + 1)
+            local middle = (upper ^ (effective_ante - math.floor(effective_ante))) * (lower ^ (1 + math.floor(effective_ante) - effective_ante))
+            middle = middle + 1
+            middle = middle - middle%(10^math.floor(math.log10(middle)-1))
+            return middle
+        end
+    else
+        return old_blind_amount(ante)
+    end
+end
+
+old_mod_chips = mod_chips
+function mod_chips(_chips)
+    local chips = old_mod_chips(_chips)
+    if chips >= 1111 then
+        G.E_MANAGER:add_event(Event({
+            trigger = 'immediate',
+            func = function()
+                unlock_party_joker('j_hiker')
+                return true
+            end
+        }))
+    end
+    return chips
 end
 
 ----------------------------------------------

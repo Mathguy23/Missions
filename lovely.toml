@@ -28,18 +28,10 @@ match_indent = true
 target = 'game.lua'
 pattern = '''self.GAME.modifiers[v.id] = true'''
 position = 'after'
-payload = '''if (G.PROFILES[G.SETTINGS.profile].mission_jokers) and (v.id == 'mission') then
-    self.GAME.modifiers[v.id] = v.mission_id
-    for i, j in ipairs(G.PROFILES[G.SETTINGS.profile].mission_jokers) do
-        G.E_MANAGER:add_event(Event({
-            func = function()
-                local card = add_joker(j, nil)
-                if v.mission_id == 2 then
-                    card.ability.miss_defended = true
-                end
-                return true
-            end
-        }))
+payload = '''if (G.PROFILES[G.SETTINGS.profile].mission_jokers) and ((v.id == 'mission') or (v.id == 'miss_chrono')) then
+    self.GAME.modifiers[v.id] = v.mission_id or v.win_ante
+    if (v.id == 'miss_chrono') then
+        G.GAME.win_ante = v.win_ante
     end
 end'''
 match_indent = true
@@ -51,8 +43,14 @@ pattern = '''self:emplace(card, nil, stay_flipped)'''
 position = 'before'
 payload = '''if (self == G.hand) and G.GAME and G.GAME.modifiers and (G.GAME.modifiers.mission == 1) then
     local odds = 0
-    if (G.GAME.round_resets.ante >= 3) then
-        odds = 0.1 + 0.018 * (G.GAME.round_resets.ante - 2)
+    if G.GAME.modifiers.miss_chrono == 6 then
+        if (G.GAME.round_resets.ante >= 3) then
+            odds = 0.1 + 0.027 * (G.GAME.round_resets.ante - 2)
+        end
+    else
+        if (G.GAME.round_resets.ante >= 3) then
+            odds = 0.1 + 0.018 * (G.GAME.round_resets.ante - 2)
+        end
     end
     if G.GAME and G.GAME.blind and (G.GAME.blind.name == "Scorched Acorn") and not G.GAME.blind.disabled then
         odds = odds * 1.5
@@ -160,8 +158,20 @@ pattern = '''elseif _c.set == 'Joker' then'''
 position = 'before'
 payload = '''elseif (_c.set == 'Joker') and card and card.ability and card.ability.grayscaled then
     if G.localization.descriptions.LockedJoker[_c.key] then
+        if _c.name == "Flower Pot" then
+            if G.GAME and G.GAME.miss_unlock_trackers and G.GAME.miss_unlock_trackers.scored.total == 0 then
+                specific_vars = {'NaN', 'NaN', 'NaN', 'NaN'}
+            else
+                specific_vars = {
+                    string.format('%.1f', math.ceil(1000 * G.GAME.miss_unlock_trackers.scored.Spades / G.GAME.miss_unlock_trackers.scored.total) / 10),
+                    string.format('%.1f', math.ceil(1000 * G.GAME.miss_unlock_trackers.scored.Hearts / G.GAME.miss_unlock_trackers.scored.total) / 10),
+                    string.format('%.1f', math.ceil(1000 * G.GAME.miss_unlock_trackers.scored.Clubs / G.GAME.miss_unlock_trackers.scored.total) / 10),
+                    string.format('%.1f', math.ceil(1000 * G.GAME.miss_unlock_trackers.scored.Diamonds / G.GAME.miss_unlock_trackers.scored.total) / 10),
+                }
+            end
+        end
         localize{type = 'descriptions', key = _c.key, set = 'LockedJoker', nodes = desc_nodes, vars = specific_vars or {}}
-        local texts = {'alpha', 'beta'}
+        local texts = {'alpha', 'beta', 'gamma'}
         local tier = miss_joker_tiers[_c.key] or 1
         localize{type = 'descriptions', key = texts[tier] .. '_1', set = 'Other', nodes = desc_nodes}
         info_queue[#info_queue + 1] = {key = texts[tier] .. '_2', set = 'Other'}
@@ -205,6 +215,7 @@ payload = '''miss_unlock_trackers = {
     skippedskip = false,
     discarded = false,
     nonfivecardhand = false,
+    fivecardhand = false,
     nofacedjokers = true,
     nopairhands = true,
     matadorcheck = true,
@@ -217,6 +228,16 @@ payload = '''miss_unlock_trackers = {
     allfours = true,
     allflushes = true,
     allstraights = true,
+    scored = {
+        Hearts = 0,
+        Spades = 0,
+        Clubs = 0,
+        Diamonds = 0,
+        total = 0,
+    },
+    bp_wheel_history = {},
+    seals_this_hand = {},
+    discarded_hand_types = {},
 },
 joker_tooltips = {
     j_hanging_chad = {
@@ -224,6 +245,18 @@ joker_tooltips = {
         button_text = localize('b_extra_tooltips')
     },
     j_faceless = {
+        active = false,
+        button_text = localize('b_extra_tooltips')
+    },
+    j_flower_pot = {
+        active = false,
+        button_text = localize('b_extra_tooltips')
+    },
+    j_misprint = {
+        active = false,
+        button_text = localize('b_extra_tooltips')
+    },
+    j_rocket = {
         active = false,
         button_text = localize('b_extra_tooltips')
     },
@@ -317,7 +350,9 @@ if G.GAME and G.GAME.modifiers and (G.GAME.modifiers.mission == 3) then
                 else
                     infect_table[i + 1] = true
                 end
-            elseif pseudorandom('rand_infection') < (0.015 * (G.GAME.round_resets.ante - 4)) then
+            elseif (G.GAME.modifiers.miss_chrono ~= 6) and (pseudorandom('rand_infection') < (0.015 * (G.GAME.round_resets.ante - 4))) then
+                infect_table[i + 1] = true
+            elseif (pseudorandom('rand_infection') < (0.035 * (G.GAME.round_resets.ante - 4))) then
                 infect_table[i + 1] = true
             end
         end
@@ -368,6 +403,17 @@ target = 'functions/state_events.lua'
 pattern = '''G.FUNCS.discard_cards_from_highlighted = function(e, hook)'''
 position = 'after'
 payload = '''   G.GAME.miss_unlock_trackers.discarded = true
+    if not G.GAME.won then
+        local text,disp_text,poker_hands,scoring_hand,non_loc_disp_text = G.FUNCS.get_poker_hand_info(G.hand.highlighted)
+        G.GAME.miss_unlock_trackers.discarded_hand_types[non_loc_disp_text] = true
+        local count = 0
+        for i, j in pairs(G.GAME.miss_unlock_trackers.discarded_hand_types) do
+            count = count + 1
+        end
+        if count >= 11 then
+            unlock_party_joker('j_burnt')
+        end
+    end
     for i = 1, #G.hand.highlighted do
         for i2, j2 in pairs(SMODS.Suits) do
             if G.GAME.modifiers.mission and G.hand.highlighted[i]:is_suit(j2.key) then
@@ -470,6 +516,33 @@ payload = '''if G.GAME.modifiers.mission then
     end
     if cavendished then
         unlock_party_joker('j_gros_michel')
+    end
+    if (G.GAME.miss_unlock_trackers.scored.total > 0) and (G.GAME.miss_unlock_trackers.scored.Spades / G.GAME.miss_unlock_trackers.scored.total <= 0.35) and
+    (G.GAME.miss_unlock_trackers.scored.Hearts / G.GAME.miss_unlock_trackers.scored.total <= 0.35) and
+    (G.GAME.miss_unlock_trackers.scored.Clubs / G.GAME.miss_unlock_trackers.scored.total <= 0.35) and
+    (G.GAME.miss_unlock_trackers.scored.Diamonds / G.GAME.miss_unlock_trackers.scored.total <= 0.35) then
+        unlock_party_joker('j_flower_pot')
+    end
+    local party_jokers = 0
+    for i = 1, #G.jokers.cards do
+        if G.jokers.cards[i] and G.jokers.cards[i].ability and G.jokers.cards[i].ability.miss_from_joker_party then
+            party_jokers = party_jokers + 1
+        end
+    end
+    if party_jokers >= 4 then
+        unlock_party_joker('j_misprint')
+    end
+    if not G.GAME.miss_unlock_trackers.fivecardhand then
+        unlock_party_joker('j_four_fingers')
+    end
+    local economy_jokers = 0
+    for i = 1, #G.jokers.cards do
+        if G.jokers.cards[i] and G.jokers.cards[i].config and jokers_with_economy[G.jokers.cards[i].config.center.key] then
+            economy_jokers = economy_jokers + 1
+        end
+    end
+    if economy_jokers >= 4 then
+        unlock_party_joker('j_rocket')
     end
 end'''
 match_indent = true
@@ -607,12 +680,37 @@ payload = '''if G.GAME and G.GAME.blind and (G.GAME.blind.name == "Existential E
 else
     if card and card.ability and card.ability.death_timer then info_queue[#info_queue+1] = {key = 'death_timer', set = 'Other', vars = {card.ability.death_timer}} end
 end
-if G.GAME and G.GAME.joker_tooltips and card and card.playing_card and G.GAME.joker_tooltips['j_hanging_chad'].active then info_queue[#info_queue+1] = {key = 'times_triggered', set = 'Other', vars = {card.ability.times_triggered or 0}} end
+if G.GAME and G.GAME.joker_tooltips and card and (card.playing_card or (card.area and card.area.config.view_deck)) and G.GAME.joker_tooltips['j_hanging_chad'].active then info_queue[#info_queue+1] = {key = 'times_triggered', set = 'Other', vars = {card.ability.times_triggered or 0}} end
 if G.GAME and G.GAME.joker_tooltips and card and card.ability and (card.ability.set == "Joker") and G.GAME.joker_tooltips['j_faceless'].active then 
     if jokers_with_face[_c.key] then
         info_queue[#info_queue+1] = {key = 'has_face', set = 'Other'}
     else
         info_queue[#info_queue+1] = {key = 'has_no_face', set = 'Other'}
+    end
+end
+if G.GAME and G.GAME.joker_tooltips and card and (card.playing_card or (card.area and card.area.config.view_deck)) and G.GAME.joker_tooltips['j_flower_pot'].active and (G.GAME.miss_unlock_trackers.scored.total > 0) then
+    for j, k in ipairs({"Spades", "Hearts", "Diamonds", "Clubs"}) do
+        if card:is_suit(k) then
+            local percent = G.GAME.miss_unlock_trackers.scored[k] / G.GAME.miss_unlock_trackers.scored.total
+            local text = string.format('%.1f%%', math.ceil(1000 * G.GAME.miss_unlock_trackers.scored[k] / G.GAME.miss_unlock_trackers.scored.total) / 10)
+            if percent > 0.35 then
+                info_queue[#info_queue+1] = {key = 'suit_percent_red', set = 'Other', vars = {k, text, colours = {G.C.SUITS[k]}}}
+            else
+                info_queue[#info_queue+1] = {key = 'suit_percent_green', set = 'Other', vars = {k, text, colours = {G.C.SUITS[k]}}}
+            end
+        end
+    end
+end
+if G.GAME and G.GAME.joker_tooltips and card and card.ability and (card.ability.set == "Joker") and G.GAME.joker_tooltips['j_misprint'].active then 
+    if card.ability.miss_from_joker_party then
+        info_queue[#info_queue+1] = {key = 'from_joker_party', set = 'Other'}
+    end
+end
+if G.GAME and G.GAME.joker_tooltips and card and card.ability and (card.ability.set == "Joker") and G.GAME.joker_tooltips['j_rocket'].active then 
+    if jokers_with_economy[_c.key] then
+        info_queue[#info_queue+1] = {key = 'is_econ', set = 'Other'}
+    else
+        info_queue[#info_queue+1] = {key = 'is_not_econ', set = 'Other'}
     end
 end'''
 match_indent = true
@@ -641,6 +739,9 @@ position = 'before'
 payload = '''if #scoring_hand ~= 5 then
     G.GAME.miss_unlock_trackers.nonfivecardhand = true
 end
+if #scoring_hand == 5 then
+    G.GAME.miss_unlock_trackers.fivecardhand = true
+end
 if (#G.play.cards ~= 4) and not (G.GAME.blind and (G.GAME.blind.name == "The Psychic")) then
     G.GAME.miss_unlock_trackers.nonfourcardhand = true
 end
@@ -661,7 +762,8 @@ if text ~= 'Flush' then
 end
 if text ~= 'Straight' then
     G.GAME.miss_unlock_trackers.allstraights = nil
-end'''
+end
+G.GAME.miss_unlock_trackers.seals_this_hand = {}'''
 match_indent = true
 
 [[patches]]
@@ -715,19 +817,32 @@ target = 'functions/common_events.lua'
 pattern = '''local ret = {}'''
 position = 'after'
 payload = '''if card.playing_card and context.main_scoring and not card.debuff and (card.area == G.play) then
-    if not card.ability.times_triggered then
-        card.ability.times_triggered = 1
-    else
-        card.ability.times_triggered = card.ability.times_triggered + 1
-        if (card.ability.times_triggered >= 50) and not G.GAME.won then
-            G.E_MANAGER:add_event(Event({
-                trigger = 'immediate',
-                func = function()
-                    unlock_party_joker('j_hanging_chad')
-                    return true
-                end
-            }))
+    card.ability.times_triggered = (card.ability.times_triggered or 0) + 1
+    for j, k in ipairs({"Red", "Blue", "Purple", "Gold"}) do
+        if card.seal == k then
+            G.GAME.miss_unlock_trackers.seals_this_hand[k] = true
+            if G.GAME.miss_unlock_trackers.seals_this_hand.Red and
+            G.GAME.miss_unlock_trackers.seals_this_hand.Blue and
+            G.GAME.miss_unlock_trackers.seals_this_hand.Purple and
+            G.GAME.miss_unlock_trackers.seals_this_hand.Gold then
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'immediate',
+                    func = function()
+                        unlock_party_joker('j_certificate')
+                        return true
+                    end
+                }))
+            end
         end
+    end
+    if (card.ability.times_triggered >= 50) and not G.GAME.won then
+        G.E_MANAGER:add_event(Event({
+            trigger = 'immediate',
+            func = function()
+                unlock_party_joker('j_hanging_chad')
+                return true
+            end
+        }))
     end
 end'''
 match_indent = true
@@ -735,7 +850,7 @@ match_indent = true
 [[patches]]
 [patches.pattern]
 target = 'card.lua'
-pattern = '''if self.ability.name == 'To Do List' and context.scoring_name == self.ability.to_do_poker_hand then'''
+pattern = '''if self.ability.name == 'To Do List' and context.scoring_name == self.ability.to_3poker_hand then'''
 position = 'before'
 payload = '''if true and (self.ability.name == 'To Do List' and context.scoring_name == self.ability.to_do_poker_hand) then
     if not self.ability.miss_successive then
@@ -910,4 +1025,76 @@ target = 'tag.lua'
 pattern = '''G.GAME.last_blind and G.GAME.last_blind.boss then'''
 position = 'after'
 payload = '''G.GAME.investment_dollars = (G.GAME.investment_dollars or 0) + self.config.dollars'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''if G.GAME.current_round.current_hand.handname ~= disp_text then delay(0.3) end'''
+position = "after"
+payload = '''for i = 1, #G.play.cards do
+    if G.GAME.modifiers.mission then
+        G.GAME.miss_unlock_trackers.scored.total = G.GAME.miss_unlock_trackers.scored.total + 1
+        local has_suit = false
+        for j, k in ipairs({"Spades", "Hearts", "Diamonds", "Clubs"}) do
+            if G.play.cards[i]:is_suit(k) then
+                G.GAME.miss_unlock_trackers.scored[k] = G.GAME.miss_unlock_trackers.scored[k] + 1
+                has_suit = true
+            end
+        end
+        if not has_suit then
+            G.GAME.miss_unlock_trackers.scored.total = G.GAME.miss_unlock_trackers.scored.total - 1
+        end
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''G.GAME.blind:drawn_to_hand()'''
+position = 'before'
+payload = '''if #G.hand.cards == #G.playing_cards then
+    unlock_party_joker('j_juggler')
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''attention_text({
+    text = localize('k_nope_ex'),'''
+position = 'before'
+payload = '''table.insert(G.GAME.miss_unlock_trackers.bp_wheel_history, false)
+if #G.GAME.miss_unlock_trackers.bp_wheel_history == 4 then
+    local valid = true
+    for i = 1, 3 do
+        if not G.GAME.miss_unlock_trackers.bp_wheel_history[i] then
+            valid = false
+            break
+        end
+    end
+    if valid then
+        unlock_party_joker('j_oops')
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''elseif self.ability.name == 'The Wheel of Fortune' then'''
+position = 'after'
+payload = '''   table.insert(G.GAME.miss_unlock_trackers.bp_wheel_history, true)
+    if #G.GAME.miss_unlock_trackers.bp_wheel_history >= 4 then
+        local misses = 0
+        for i = #G.GAME.miss_unlock_trackers.bp_wheel_history - 3, #G.GAME.miss_unlock_trackers.bp_wheel_history do
+            if not G.GAME.miss_unlock_trackers.bp_wheel_history[i] then
+                misses = misses + 1
+            end
+        end
+        if misses <= 1 then
+            unlock_party_joker('j_oops')
+        end
+    end'''
 match_indent = true

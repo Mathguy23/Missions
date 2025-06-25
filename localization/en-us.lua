@@ -36,14 +36,51 @@ return {
                 name = "Faceless Joker",
                 text = {
                     "This {C:attention}Joker{} has",
-                    "a {C:attention}face{}",
+                    "{C:red}a{} {C:attention}face{}",
                 }
             },
             has_no_face = {
                 name = "Faceless Joker",
                 text = {
                     "This {C:attention}Joker{} has",
-                    "a {C:red}no{} {C:attention}face{}",
+                    "{C:green}no{} {C:attention}face{}",
+                }
+            },
+            suit_percent_red = {
+                name = "Flower Pot",
+                text = {
+                    "{V:1}#1#{} are {C:red}#2#{}",
+                    "of played suited cards",
+                    "this run"
+                }
+            },
+            suit_percent_green = {
+                name = "Flower Pot",
+                text = {
+                    "{V:1}#1#{} are {C:green}#2#{}",
+                    "of played suited cards",
+                    "this run"
+                }
+            },
+            from_joker_party = {
+                name = "Misprint",
+                text = {
+                    "This {C:attention}Joker{} is from",
+                    "your {C:attention}Joker Party{}",
+                }
+            },
+            is_econ = {
+                name = "Rocket",
+                text = {
+                    "This {C:green}is{} an",
+                    "{C:money}Economy{} {C:attention}Joker{}",
+                }
+            },
+            is_not_econ = {
+                name = "Rocket",
+                text = {
+                    "This is {C:red}not{} an",
+                    "{C:money}Economy{} {C:attention}Joker{}",
                 }
             },
             alpha_1 = {
@@ -217,7 +254,7 @@ return {
                 text = {
                     "{C:attention}Trigger{} the same card",
                     "{C:attention}50{} times without",
-                    "{C:attention}winning{} the run"
+                    "entering {C:dark_edition}Endless Mode{}"
                 }
             },
             j_sly = {
@@ -390,7 +427,73 @@ return {
             j_cartomancer = {
                 text = {
                     "Use {C:attention}6{} unique {C:spectral}Spectral{}",
-                    "cards without {C:attention}winning{}",
+                    "cards without entering",
+                    "{C:dark_edition}Endless Mode{}"
+                }
+            },
+            j_flower_pot = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{} with",
+                    "the percent of {C:attention}played suited{}",
+                    "{C:attention}cards{} of {C:hearts}Heart{}, {C:spades}Spade{}, {C:clubs}Club{},",
+                    "and {C:diamonds}Diamond{} suits are all no",
+                    "more than {C:attention}35%{}",
+                    "{C:inactive}({C:spades}#1#%{C:inactive}, {C:hearts}#2#%{C:inactive}, {C:clubs}#3#%{C:inactive}, {C:diamonds}#4#%{C:inactive})"
+                }
+            },
+            j_misprint = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "with {C:attention}4 Jokers{} from",
+                    "your {C:attention}Joker Party{}",
+                }
+            },
+            j_four_fingers = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "playing no {C:attention}5-card{}",
+                    "hands"
+                }
+            },
+            j_juggler = {
+                text = {
+                    "Hold {C:attention}all{} cards in",
+                    "{C:attention}Full Deck{} in hand",
+                    "at once"
+                }
+            },
+            j_rocket = {
+                text = {
+                    "{C:green}Accomplish{} a {C:attention}Mission{}",
+                    "with {C:attention}4{} {C:money}Economy{}",
+                    "{C:attention}Jokers{}",
+                }
+            },
+            j_oops = {
+                text = {
+                    "Use {C:tarot}Wheel of Fortune{}",
+                    "{C:attention}4{} times in a row with",
+                    "at most {C:attention}1{} {C:purple}Nope!{}",
+                }
+            },
+            j_certificate = {
+                text = {
+                    "Score a {C:red}Red{}, {C:money}Gold{},",
+                    "{C:purple}Purple{}, and a {C:blue}Blue{}",
+                    "{C:attention}Sealed{} card in {C:attention}1{} hand",
+                }
+            },
+            j_burnt = {
+                text = {
+                    "{C:red}Discard{} {C:attention}11{} unique",
+                    "{C:attention}hand types{} without",
+                    "entering {C:dark_edition}Endless Mode{}"
+                }
+            },
+            j_hiker = {
+                text = {
+                    "Have {C:blue}1,111{} or",
+                    "more {C:blue}Chips{}"
                 }
             },
             --------------
@@ -406,24 +509,24 @@ return {
                 text = {
                     "By Ante 3, cards may be drawn face down",
                     "By Ante 4, cards in shop may be face down",
-                    "Ante 4 blind is Amber Acorn",
-                    "Ante 8 blind is Scorched Acorn"
+                    "Ante #1# blind is Amber Acorn",
+                    "Ante #2# blind is Scorched Acorn"
                 }
             },
             m_fading_fog = {
                 text = {
                     "Jokers and Consumables delete after 3 rounds",
                     "Joker Party Jokers are immune to the above rule",
-                    "Ante 4 blind is Ebony Eraser",
-                    "Ante 8 blind is Existential Eraser"
+                    "Ante #1# blind is Ebony Eraser",
+                    "Ante #2# blind is Existential Eraser"
                 }
             },
             m_viral_valley = {
                 text = {
                     "Start with 3 Infected playing cards",
                     "Jokers and Playing Cards may become Infected randomly",
-                    "Ante 4 blind is Periwinkle Pathogen",
-                    "Ante 8 blind is Corrupt Pathogen",
+                    "Ante #1# blind is Periwinkle Pathogen",
+                    "Ante #2# blind is Corrupt Pathogen",
                 }
             },
         }
@@ -445,7 +548,8 @@ return {
             k_achoo = "Achoo!",
             b_extra_tooltips = "Add Tooltips",
             b_minus_tooltips = "Remove Tooltips",
-            b_no_tooltips = "No Tooltips"
+            b_no_tooltips = "No Tooltips",
+            b_six_ante = "6-Ante Mode"
         },
         v_text = {
             
